@@ -95,13 +95,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [adminRejectReason, setAdminRejectReason] = useState('Nominal transfer tidak sesuai tagihan / mutasi bank belum terdata');
   const [adminActionToast, setAdminActionToast] = useState<string | null>(null);
 
-  // Test MySQL form
   const [mysqlHost, setMysqlHost] = useState('localhost');
-  const [mysqlUser, setMysqlUser] = useState('u1234_dbuser');
+  const [mysqlUser, setMysqlUser] = useState('bergulir_dbuser');
   const [mysqlPass, setMysqlPass] = useState('');
-  const [mysqlDb, setMysqlDb] = useState('u1234_celebesevent');
+  const [mysqlDb, setMysqlDb] = useState('bergulir_celebeseventok');
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [isTestingMysql, setIsTestingMysql] = useState(false);
+  const [isCopiedSql, setIsCopiedSql] = useState(false);
+
+  const handleCopySql = async () => {
+    try {
+      const res = await fetch('/api/export-sql');
+      const sqlText = await res.text();
+      await navigator.clipboard.writeText(sqlText);
+      setIsCopiedSql(true);
+      setTimeout(() => setIsCopiedSql(false), 3000);
+    } catch {
+      setIsCopiedSql(false);
+    }
+  };
 
   const fetchDbInfo = async () => {
     setIsLoadingDbStatus(true);
@@ -1124,15 +1136,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCopySql}
+                  className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer border border-slate-300"
+                >
+                  {isCopiedSql ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-600" />}
+                  <span>{isCopiedSql ? 'Tersalin ke Clipboard!' : 'Salin Seluruh Kueri SQL'}</span>
+                </button>
                 <a
                   href="/api/export-sql"
                   download="celebes_event_mysql.sql"
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Unduh File database/schema.sql</span>
+                  <span>Unduh celebes_event_mysql.sql</span>
                 </a>
+              </div>
+            </div>
+
+            {/* Banner Penjelasan Error #1044 cPanel */}
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-2">
+              <div className="flex items-center gap-2 font-bold text-amber-950">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Penyelesaian Galat #1044 di phpMyAdmin cPanel:</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-amber-800">
+                Di cPanel hosting (IDwebhost), database Anda bernama <strong>bergulir_celebeseventok</strong>. Galat <em>#1044 Access denied to celebes_event_db</em> terjadi jika menggunakan file SQL lama yang memiliki perintah <code className="bg-amber-100 px-1 rounded text-red-700">CREATE DATABASE celebes_event_db;</code>.
+              </p>
+              <div className="text-[11px] bg-white/70 p-2.5 rounded-lg border border-amber-200 font-medium">
+                ✅ <strong>Solusi Mudah (1 Detik):</strong> Buka tab <strong>SQL</strong> di phpMyAdmin (pastikan sedang membuka basis data <em>bergulir_celebeseventok</em>), lalu klik tombol <strong>"Salin Seluruh Kueri SQL"</strong> di atas, paste di kotak SQL phpMyAdmin, lalu klik <strong>Kirim (Go)</strong>. Semua 12 tabel & data awal akan langsung terbuat sempurna!
               </div>
             </div>
 
@@ -1190,7 +1224,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="text"
                       value={mysqlDb}
                       onChange={(e) => setMysqlDb(e.target.value)}
-                      placeholder="u1234_celebesevent"
+                      placeholder="bergulir_celebeseventok"
                       className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
                     />
                   </div>
@@ -1203,7 +1237,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="text"
                       value={mysqlUser}
                       onChange={(e) => setMysqlUser(e.target.value)}
-                      placeholder="u1234_dbuser"
+                      placeholder="bergulir_dbuser"
                       className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
                     />
                   </div>

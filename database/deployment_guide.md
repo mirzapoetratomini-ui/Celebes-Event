@@ -8,34 +8,31 @@ Aplikasi ini dibangun menggunakan **Node.js (Express + React Vite)** dengan duku
 
 ---
 
-## 1. Import Database ke MySQL Hosting
+## 1. Import Database ke MySQL Hosting (cPanel IDwebhost / phpMyAdmin)
 
-1. Masuk ke **cPanel** hosting Anda.
-2. Buka menu **MySQL Databases**:
-   - Buat database baru, contoh: `u1234_celebesevent`
-   - Buat user database baru, contoh: `u1234_dbuser` dan masukkan password kuat.
-   - Tambahkan user ke database dengan mencentang **ALL PRIVILEGES**.
-3. Buka **phpMyAdmin** dari cPanel.
-4. Pilih database `u1234_celebesevent` di sebelah kiri.
-5. Klik tab **Import** di bagian atas, pilih file `database/schema.sql`, lalu klik **Go / Kirim**.
-6. Semua tabel (`users`, `events`, `ticket_tiers`, `orders`, `tickets`, dll) beserta data awal akan selesai dibuat secara otomatis.
+1. Buka **phpMyAdmin** dari cPanel hosting Anda.
+2. Di bilah menu sebelah kiri, klik nama database Anda: **`bergulir_celebeseventok`** (atau `bergulir_celebesevent`).
+3. Klik tab **Impor / Import** di menu bagian atas.
+4. Klik tombol **Choose File / Pilih File**, lalu pilih file **`database/schema.sql`** dari project ini.
+5. Gulir ke bawah dan klik tombol **Kirim / Go**.
+6. Status akan langsung berhasil (*sukses warna hijau*) dan seluruh tabel (`users`, `events`, `ticket_tiers`, `orders`, `tickets`, `vouchers`, `support_tickets`, `faqs`, dll) selesai dibuat.
 
 ---
 
 ## 2. Konfigurasi Environment (`.env`) di Hosting
 
-Buat file `.env` di root direktori hosting Anda dengan konfigurasi MySQL yang telah dibuat:
+Buat file `.env` di root direktori aplikasi hosting Anda:
 
 ```env
 PORT=3000
 NODE_ENV=production
 
-# Konfigurasi Koneksi MySQL Hosting
+# Konfigurasi Koneksi MySQL Hosting:
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
-MYSQL_USER=u1234_dbuser
-MYSQL_PASSWORD=PasswordKalianYangKuat123!
-MYSQL_DATABASE=u1234_celebesevent
+MYSQL_USER=bergulir_userdb
+MYSQL_PASSWORD=PasswordUserDatabaseAnda123!
+MYSQL_DATABASE=bergulir_celebeseventok
 
 # URL Domain Anda
 APP_URL=https://nama-domain-anda.com
