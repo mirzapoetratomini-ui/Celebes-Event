@@ -58,7 +58,7 @@ test('validateCustomResponses: catches missing required fields and allows filled
 
 test('generateTicketCode & generateQrPayload: creates valid format and verification payload', () => {
   const code = generateTicketCode('TECH', 1234);
-  assert.ok(code.startsWith('TN-TECH-'));
+  assert.ok(code.startsWith('CE-TECH-'));
   
   const payload = generateQrPayload(code, 'evt-1', 'budi@test.com');
   assert.ok(payload.includes(code));
@@ -93,7 +93,7 @@ test('generateSocialShareLinks: creates valid WhatsApp, Telegram, and Google reg
     slug: 'festival-musik-nusantara',
     shortDescription: 'Festival musik spektakuler',
   };
-  const links = generateSocialShareLinks(event, 'https://tiketnusa.id');
+  const links = generateSocialShareLinks(event, 'https://celebes-event.com');
 
   assert.ok(links.whatsapp.includes('api.whatsapp.com'));
   assert.ok(links.telegram.includes('t.me/share'));

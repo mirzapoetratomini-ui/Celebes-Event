@@ -101,7 +101,7 @@ export const TicketInvoiceModal: React.FC<TicketInvoiceModalProps> = ({
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(56, 189, 248); // Cyan
-      doc.text('OFFICIAL E-TICKET PASS • TIKETNUSA GATEWAY', 14, 18);
+      doc.text('OFFICIAL E-TICKET PASS • CELEBES EVENT GATEWAY', 14, 18);
 
       // Event Title
       doc.setFontSize(13);
@@ -241,7 +241,7 @@ export const TicketInvoiceModal: React.FC<TicketInvoiceModalProps> = ({
       </div>
     </div>
     <div class="ticket-footer">
-      <span>Terverifikasi secara kriptografis oleh Platform TiketNusa</span>
+      <span>Terverifikasi secara kriptografis oleh Platform Celebes Event</span>
       <span style="font-family: monospace;">KODE: ${currentTicket.ticketCode}</span>
     </div>
   </div>
@@ -262,7 +262,7 @@ export const TicketInvoiceModal: React.FC<TicketInvoiceModalProps> = ({
 
   const handleAddToCalendar = () => {
     const title = encodeURIComponent(order.eventTitle);
-    const details = encodeURIComponent(`Tiket Resmi: ${currentTicket.ticketCode}\nPemesan: ${currentTicket.attendeeName}\nDipersembahkan oleh TiketNusa`);
+    const details = encodeURIComponent(`Tiket Resmi: ${currentTicket.ticketCode}\nPemesan: ${currentTicket.attendeeName}\nDipersembahkan oleh Celebes Event`);
     const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}`;
     window.open(googleCalendarUrl, '_blank');
   };
@@ -431,7 +431,7 @@ export const TicketInvoiceModal: React.FC<TicketInvoiceModalProps> = ({
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 uppercase tracking-wider">
                       Official E-Pass • Modern Edition
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">TIKETNUSA GATEWAY</span>
+                    <span className="text-[10px] text-slate-400 font-mono">CELEBES EVENT GATEWAY</span>
                   </div>
                   <h2 className="text-lg sm:text-xl font-extrabold mt-1 text-white leading-tight">
                     {order.eventTitle}
@@ -531,7 +531,7 @@ export const TicketInvoiceModal: React.FC<TicketInvoiceModalProps> = ({
               <div className="bg-slate-50 border-t border-slate-200 px-6 py-3 flex items-center justify-between text-[11px] text-slate-500">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Kriptografi HMAC & Enkripsi TiketNusa</span>
+                  <span>Kriptografi HMAC & Enkripsi Celebes Event</span>
                 </div>
                 <span className="font-mono text-[10px] text-slate-400">
                   REF: {order.paymentReference || 'VERIFIED'}
@@ -701,7 +701,7 @@ export const TicketInvoiceModal: React.FC<TicketInvoiceModalProps> = ({
               </div>
 
               <div className="bg-amber-100/80 px-6 py-2 border-t border-amber-200 text-[10px] flex justify-between text-amber-900">
-                <span>TIKETNUSA TICKETING SYSTEM</span>
+                <span>CELEBES EVENT TICKETING SYSTEM</span>
                 <span>STATUS: {order.paymentStatus.toUpperCase()}</span>
               </div>
             </div>

@@ -41,8 +41,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleQuickRoleLogin = (role: 'admin' | 'creator' | 'user') => {
     const predefined = INITIAL_USERS.find(u => u.role === role) || {
       id: `usr-${role}-${Date.now().toString().slice(-4)}`,
-      email: role === 'admin' ? 'admin@tiketnusa.id' : role === 'creator' ? 'kreator@festivanusantara.com' : 'budi.santoso@gmail.com',
-      name: role === 'admin' ? 'Super Administrator' : role === 'creator' ? 'Festiva Nusantara Organizer' : 'Budi Santoso',
+      email: role === 'admin' ? 'admin@celebes-event.com' : role === 'creator' ? 'kreator@celebescreative.id' : 'budi.santoso@gmail.com',
+      name: role === 'admin' ? 'Super Administrator Celebes Event' : role === 'creator' ? 'Celebes Creative Promosindo' : 'Budi Santoso',
       role,
       avatar:
         role === 'admin'
@@ -125,7 +125,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </span>
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <LogIn className="w-5 h-5 text-blue-400" />
-              Masuk ke TiketNusa
+              Masuk ke Celebes Event
             </h3>
           </div>
           <button
@@ -154,7 +154,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 type="button"
                 onClick={() => {
                   setActiveTab('admin');
-                  setEmail('admin@tiketnusa.id');
+                  setEmail('admin@celebes-event.com');
                   setPassword('demo123');
                 }}
                 className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 cursor-pointer ${
@@ -171,7 +171,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 type="button"
                 onClick={() => {
                   setActiveTab('creator');
-                  setEmail('kreator@festivanusantara.com');
+                  setEmail('kreator@celebescreative.id');
                   setPassword('demo123');
                 }}
                 className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 cursor-pointer ${
@@ -258,7 +258,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@tiketnusa.id"
+                  placeholder="admin@celebes-event.com"
                   className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 />
               </div>

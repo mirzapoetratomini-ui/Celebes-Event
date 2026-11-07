@@ -38,8 +38,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [logoLoadError, setLogoLoadError] = useState(false);
 
-  const platformName = settings?.platformName || 'TiketNusa';
-  const tagline = settings?.tagline || 'Platform Manajemen Event & Tiket Resmi';
+  const platformName = settings?.platformName || 'Celebes Event';
+  const tagline = settings?.tagline || 'Platform Manajemen Event & E-Ticket Resmi';
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">

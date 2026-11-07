@@ -610,7 +610,7 @@ export default function App() {
                   Pertanyaan yang Sering Diajukan
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500">
-                  Masih ada yang membingungkan? Kami rangkum jawaban dari pertanyaan yang paling sering ditanyakan seputar GoEvent & {platformSettings.platformName}.
+                  Masih ada yang membingungkan? Kami rangkum jawaban dari pertanyaan yang paling sering ditanyakan seputar {platformSettings.platformName}.
                 </p>
               </div>
 

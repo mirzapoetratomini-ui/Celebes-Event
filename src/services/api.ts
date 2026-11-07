@@ -13,7 +13,7 @@ export const api = {
         isConfigured: false,
         mode: 'memory-resilient',
         host: 'localhost (Local Mode)',
-        database: 'tiketnusa_db',
+        database: 'celebes_event_db',
         user: 'root',
         connected: false,
         latencyMs: 0,

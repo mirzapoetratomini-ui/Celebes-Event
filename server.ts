@@ -17,6 +17,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+const LOCAL_STORAGE_FILE = path.resolve(process.cwd(), 'database', 'local_data.json');
+
 // In-Memory resilient store (fallback when MySQL host is not configured or in local preview)
 let memoryUsers: User[] = [...INITIAL_USERS];
 let memoryEvents: EventItem[] = JSON.parse(JSON.stringify(INITIAL_EVENTS));
@@ -26,6 +28,51 @@ let memoryPayouts: PayoutRequest[] = JSON.parse(JSON.stringify(INITIAL_PAYOUTS))
 let memorySettings: PlatformSettings = JSON.parse(JSON.stringify(DEFAULT_PLATFORM_SETTINGS));
 let memorySupportTickets: SupportTicket[] = JSON.parse(JSON.stringify(INITIAL_SUPPORT_TICKETS));
 let memoryFaqs: FaqItem[] = JSON.parse(JSON.stringify(INITIAL_FAQS));
+
+function saveLocalData() {
+  try {
+    const dir = path.dirname(LOCAL_STORAGE_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const dataToSave = {
+      users: memoryUsers,
+      events: memoryEvents,
+      orders: memoryOrders,
+      vouchers: memoryVouchers,
+      payouts: memoryPayouts,
+      settings: memorySettings,
+      supportTickets: memorySupportTickets,
+      faqs: memoryFaqs,
+      updatedAt: new Date().toISOString(),
+    };
+    fs.writeFileSync(LOCAL_STORAGE_FILE, JSON.stringify(dataToSave, null, 2), 'utf8');
+  } catch (err) {
+    console.warn('[Storage] Gagal menyimpan database/local_data.json:', err);
+  }
+}
+
+function loadLocalData() {
+  try {
+    if (fs.existsSync(LOCAL_STORAGE_FILE)) {
+      const content = fs.readFileSync(LOCAL_STORAGE_FILE, 'utf8');
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed.users) && parsed.users.length) memoryUsers = parsed.users;
+      if (Array.isArray(parsed.events)) memoryEvents = parsed.events;
+      if (Array.isArray(parsed.orders)) memoryOrders = parsed.orders;
+      if (Array.isArray(parsed.vouchers)) memoryVouchers = parsed.vouchers;
+      if (Array.isArray(parsed.payouts)) memoryPayouts = parsed.payouts;
+      if (parsed.settings) memorySettings = parsed.settings;
+      if (Array.isArray(parsed.supportTickets)) memorySupportTickets = parsed.supportTickets;
+      if (Array.isArray(parsed.faqs)) memoryFaqs = parsed.faqs;
+      console.log('[Storage] Data lokal berhasil dimuat dari database/local_data.json');
+    }
+  } catch (err) {
+    console.warn('[Storage] Gagal membaca database/local_data.json, menggunakan data awal:', err);
+  }
+}
+
+loadLocalData();
 
 // MySQL Connection Pool (if configured via env vars)
 let mysqlPool: mysql.Pool | null = null;
@@ -91,9 +138,9 @@ app.get('/api/db-status', async (_req: Request, res: Response) => {
 
   res.json({
     isConfigured: Boolean(process.env.MYSQL_HOST),
-    mode: isMysqlActive ? 'mysql' : 'memory-resilient',
-    host: process.env.MYSQL_HOST || 'localhost (In-Memory Engine)',
-    database: process.env.MYSQL_DATABASE || 'tiketnusa_db (Virtual)',
+    mode: isMysqlActive ? 'mysql' : 'local-storage',
+    host: process.env.MYSQL_HOST || 'Local File Storage (database/local_data.json)',
+    database: process.env.MYSQL_DATABASE || 'celebes_event_db (File Storage)',
     user: process.env.MYSQL_USER || 'root',
     connected: isMysqlActive,
     latencyMs: latency,
@@ -105,8 +152,8 @@ app.get('/api/db-status', async (_req: Request, res: Response) => {
       payouts: memoryPayouts.length,
     },
     message: isMysqlActive
-      ? 'Database MySQL aktif dan terhubung normal ke hosting.'
-      : 'Berjalan dalam mode In-Memory Engine. Skema MySQL lengkap siap diunduh & diterapkan ke phpMyAdmin hosting.',
+      ? 'Database MySQL/MariaDB aktif dan terhubung normal ke hosting.'
+      : 'Berjalan dalam mode Standalone File Storage (database/local_data.json). Aplikasi aktif 100% dan data tersimpan permanen tanpa perlu MySQL.',
   });
 });
 
@@ -138,7 +185,7 @@ app.get('/api/export-sql', (_req: Request, res: Response) => {
   if (fs.existsSync(schemaPath)) {
     const sqlContent = fs.readFileSync(schemaPath, 'utf8');
     res.setHeader('Content-Type', 'text/plain');
-    res.setHeader('Content-Disposition', 'attachment; filename="tiketnusa_mysql.sql"');
+    res.setHeader('Content-Disposition', 'attachment; filename="celebes_event_mysql.sql"');
     res.send(sqlContent);
   } else {
     res.status(404).json({ error: 'File schema.sql tidak ditemukan' });
@@ -187,6 +234,7 @@ app.post('/api/events', (req: Request, res: Response) => {
     createdAt: new Date().toISOString(),
   };
   memoryEvents.unshift(newEvent);
+  saveLocalData();
   res.status(201).json(newEvent);
 });
 
@@ -201,12 +249,14 @@ app.put('/api/events/:id', (req: Request, res: Response) => {
     ...req.body,
     updatedAt: new Date().toISOString(),
   };
+  saveLocalData();
   res.json(memoryEvents[index]);
 });
 
 app.delete('/api/events/:id', (req: Request, res: Response) => {
   const { id } = req.params;
   memoryEvents = memoryEvents.filter(e => e.id !== id);
+  saveLocalData();
   res.json({ success: true, message: 'Event berhasil dihapus' });
 });
 
@@ -243,6 +293,7 @@ app.post('/api/orders', (req: Request, res: Response) => {
   }
 
   memoryOrders.unshift(newOrder);
+  saveLocalData();
   res.status(201).json(newOrder);
 });
 
@@ -256,6 +307,7 @@ app.post('/api/orders/:id/pay', (req: Request, res: Response) => {
   order.paymentStatus = 'paid';
   order.paidAt = new Date().toISOString();
   order.paymentReference = req.body.paymentReference || `REF-PAY-${Date.now()}`;
+  saveLocalData();
 
   res.json({ success: true, order });
 });
@@ -272,17 +324,18 @@ app.post('/api/orders/:id/verify-payment', (req: Request, res: Response) => {
     order.paymentStatus = 'paid';
     order.paidAt = new Date().toISOString();
     order.verifiedAt = new Date().toISOString();
-    order.verifiedBy = verifiedBy || 'Admin TiketNusa';
+    order.verifiedBy = verifiedBy || 'Admin Celebes Event';
     order.rejectionReason = undefined;
   } else if (status === 'payment_rejected') {
     order.paymentStatus = 'payment_rejected';
     order.rejectionReason = rejectionReason || 'Bukti transfer tidak valid atau dana belum masuk ke mutasi bank.';
-    order.verifiedBy = verifiedBy || 'Admin TiketNusa';
+    order.verifiedBy = verifiedBy || 'Admin Celebes Event';
     order.verifiedAt = new Date().toISOString();
   } else {
     return res.status(400).json({ error: 'Status verifikasi tidak valid' });
   }
 
+  saveLocalData();
   res.json({ success: true, order, message: status === 'paid' ? 'Pembayaran berhasil disetujui & E-Ticket aktif!' : 'Pembayaran ditolak.' });
 });
 
@@ -328,6 +381,7 @@ app.post('/api/tickets/checkin', (req: Request, res: Response) => {
   if (result.success) {
     foundTicket.checkInStatus = result.checkInStatus;
     foundTicket.checkInTime = result.checkInTime;
+    saveLocalData();
   }
 
   res.json({
@@ -379,6 +433,7 @@ app.post('/api/payouts', (req: Request, res: Response) => {
     createdAt: new Date().toISOString(),
   };
   memoryPayouts.unshift(newPayout);
+  saveLocalData();
   res.status(201).json(newPayout);
 });
 
@@ -392,6 +447,7 @@ app.put('/api/payouts/:id', (req: Request, res: Response) => {
   payout.status = status;
   payout.adminNote = adminNote || payout.adminNote;
   payout.processedAt = new Date().toISOString();
+  saveLocalData();
   res.json(payout);
 });
 
@@ -418,6 +474,7 @@ app.put('/api/settings', (req: Request, res: Response) => {
       ...(req.body.qrisConfig || {}),
     },
   };
+  saveLocalData();
   res.json({ success: true, settings: memorySettings, message: 'Pengaturan platform berhasil disimpan.' });
 });
 
@@ -455,6 +512,7 @@ app.post('/api/support-tickets', (req: Request, res: Response) => {
   };
 
   memorySupportTickets.unshift(newTicket);
+  saveLocalData();
   res.status(201).json({ success: true, ticket: newTicket, message: 'Tiket bantuan berhasil dikirim! Tim kami akan segera menindaklanjuti.' });
 });
 
@@ -469,6 +527,7 @@ app.put('/api/support-tickets/:id', (req: Request, res: Response) => {
   if (status) ticket.status = status;
   if (adminReply !== undefined) ticket.adminReply = adminReply;
   ticket.updatedAt = new Date().toISOString();
+  saveLocalData();
 
   res.json({ success: true, ticket, message: 'Tiket bantuan berhasil diperbarui.' });
 });
@@ -484,6 +543,7 @@ app.post('/api/faqs', (req: Request, res: Response) => {
     ...req.body,
   };
   memoryFaqs.push(newFaq);
+  saveLocalData();
   res.status(201).json(newFaq);
 });
 
@@ -507,7 +567,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Server] TiketNusa berjalan di port ${PORT} (http://localhost:${PORT})`);
+    console.log(`[Server] Celebes Event berjalan di port ${PORT} (http://localhost:${PORT})`);
   });
 }
 

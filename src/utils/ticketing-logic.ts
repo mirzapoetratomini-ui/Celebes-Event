@@ -96,14 +96,14 @@ export function generateTicketCode(prefix: string, seed: number = Date.now()): s
   const cleanPrefix = prefix.replace(/[^A-Za-z0-9]/g, '').slice(0, 6).toUpperCase() || 'EVT';
   const randomHex = Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0').toUpperCase();
   const seedPart = (seed % 10000).toString().padStart(4, '0');
-  return `TN-${cleanPrefix}-${seedPart}-${randomHex}`;
+  return `CE-${cleanPrefix}-${seedPart}-${randomHex}`;
 }
 
 /**
  * Generates secure QR verification payload.
  */
 export function generateQrPayload(ticketCode: string, eventId: string, attendeeEmail: string): string {
-  return `TIKETNUSA:VERIFY:${ticketCode}:${eventId}:${attendeeEmail}`;
+  return `CELEBES:VERIFY:${ticketCode}:${eventId}:${attendeeEmail}`;
 }
 
 /**
@@ -159,7 +159,7 @@ export function formatRupiah(amount: number): string {
  */
 export function generateSocialShareLinks(
   event: { title: string; slug: string; shortDescription?: string },
-  baseUrl: string = 'https://tiketnusa.id'
+  baseUrl: string = 'https://celebes-event.com'
 ): {
   whatsapp: string;
   telegram: string;
@@ -172,7 +172,7 @@ export function generateSocialShareLinks(
 } {
   const directUrl = `${baseUrl.replace(/\/$/, '')}/event/${event.slug}`;
   const encodedUrl = encodeURIComponent(directUrl);
-  const text = encodeURIComponent(`Yuk hadir di acara ${event.title}! Daftar dan pesan tiketnya sekarang melalui TiketNusa:`);
+  const text = encodeURIComponent(`Yuk hadir di acara ${event.title}! Daftar dan pesan tiketnya sekarang melalui Celebes Event:`);
   
   // Quick Google Registration link simulating seamless Google Sign-in registration
   const googleRegisterUrl = `${directUrl}?auth_provider=google&ref=social_share`;

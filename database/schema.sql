@@ -1,12 +1,12 @@
 -- ============================================================
--- DATABASE SCHEMA: TiketNusa (Event & Ticketing Management)
+-- DATABASE SCHEMA: Celebes Event (Event & Ticketing Management)
 -- Database Engine: MySQL / MariaDB (mysqli compatible)
 -- Character Set: utf8mb4_unicode_ci
 -- Target: cPanel / VPS / Shared Hosting / Docker
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS `tiketnusa_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `tiketnusa_db`;
+CREATE DATABASE IF NOT EXISTS `celebes_event_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `celebes_event_db`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `attendee_responses`;
@@ -249,8 +249,8 @@ CREATE TABLE `system_settings` (
 
 -- 1. Users: Super Admin, Creator, User
 INSERT INTO `users` (`id`, `email`, `name`, `password_hash`, `role`, `avatar`, `phone`, `organization`, `auth_provider`, `status`, `bank_name`, `bank_account_number`, `bank_account_name`) VALUES
-('usr-admin-01', 'admin@tiketnusa.id', 'Super Administrator TiketNusa', 'demo123', 'admin', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80', '081234567890', 'TiketNusa Platform HQ', 'local', 'active', 'BCA', '8880192831', 'PT TIKET NUSA DIGITAL'),
-('usr-creator-01', 'kreator@festivanusantara.com', 'Festiva Nusantara Organizer', 'demo123', 'creator', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80', '081398765432', 'Festiva Promosindo Creative', 'google', 'active', 'Bank Mandiri', '1370019283746', 'Festiva Promosindo'),
+('usr-admin-01', 'admin@celebes-event.com', 'Super Administrator Celebes Event', 'demo123', 'admin', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80', '081241129988', 'Celebes Event Platform HQ', 'local', 'active', 'BCA', '8880192831', 'PT CELEBES EVENT NUSANTARA'),
+('usr-creator-01', 'kreator@celebescreative.id', 'Celebes Creative Promosindo', 'demo123', 'creator', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80', '081398765432', 'Celebes Creative Promosindo', 'google', 'active', 'Bank Mandiri', '1370019283746', 'Celebes Creative Promosindo'),
 ('usr-user-01', 'budi.santoso@gmail.com', 'Budi Santoso', 'demo123', 'user', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80', '085712345678', 'Universitas Indonesia', 'google', 'active', NULL, NULL, NULL);
 
 -- 2. Events
@@ -277,7 +277,7 @@ INSERT INTO `custom_form_fields` (`id`, `event_id`, `label`, `field_type`, `plac
 
 -- 5. Vouchers
 INSERT INTO `vouchers` (`id`, `event_id`, `code`, `discount_type`, `discount_value`, `quota`, `used_count`, `is_active`, `valid_until`) VALUES
-('vch-001', NULL, 'TIKETNUSAHEMAT', 'percentage', 15.00, 100, 24, 1, '2026-12-31 23:59:59'),
+('vch-001', NULL, 'CELEBESKEREN', 'percentage', 15.00, 100, 24, 1, '2026-12-31 23:59:59'),
 ('vch-002', 'evt-001', 'TECHAI2026', 'fixed', 50000.00, 50, 18, 1, '2026-11-20 00:00:00'),
 ('vch-003', 'evt-002', 'SENJAMUSIK', 'percentage', 20.00, 80, 12, 1, '2026-12-05 00:00:00');
 
@@ -288,8 +288,8 @@ INSERT INTO `orders` (`id`, `order_number`, `user_id`, `event_id`, `buyer_name`,
 
 -- 7. Initial Sample Tickets
 INSERT INTO `tickets` (`id`, `order_id`, `event_id`, `tier_id`, `ticket_code`, `qr_payload`, `attendee_name`, `attendee_email`, `check_in_status`, `check_in_time`) VALUES
-('tkt-sample-01', 'ord-sample-01', 'evt-001', 'tier-001', 'TN-TKT-TECH-001', 'TIKETNUSA:TN-TKT-TECH-001:evt-001:Budi-Santoso', 'Budi Santoso', 'budi.santoso@gmail.com', 'not_checked_in', NULL),
-('tkt-sample-02', 'ord-sample-02', 'evt-002', 'tier-004', 'TN-TKT-SENJA-002', 'TIKETNUSA:TN-TKT-SENJA-002:evt-002:Budi-Santoso', 'Budi Santoso', 'budi.santoso@gmail.com', 'checked_in', NOW());
+('tkt-sample-01', 'ord-sample-01', 'evt-001', 'tier-001', 'CE-TKT-TECH-001', 'CELEBES:CE-TKT-TECH-001:evt-001:Budi-Santoso', 'Budi Santoso', 'budi.santoso@gmail.com', 'not_checked_in', NULL),
+('tkt-sample-02', 'ord-sample-02', 'evt-002', 'tier-004', 'CE-TKT-SENJA-002', 'CELEBES:CE-TKT-SENJA-002:evt-002:Budi-Santoso', 'Budi Santoso', 'budi.santoso@gmail.com', 'checked_in', NOW());
 
 -- 8. Attendee Responses
 INSERT INTO `attendee_responses` (`id`, `ticket_id`, `field_id`, `field_label`, `response_value`) VALUES
@@ -299,10 +299,10 @@ INSERT INTO `attendee_responses` (`id`, `ticket_id`, `field_id`, `field_label`, 
 
 -- 9. System Settings
 INSERT INTO `system_settings` (`setting_key`, `setting_value`) VALUES
-('platform_name', 'TiketNusa Event Management'),
+('platform_name', 'Celebes Event Management'),
 ('platform_fee_fixed', '4500'),
 ('platform_fee_percentage', '2.5'),
 ('default_currency', 'IDR'),
-('qris_merchant_name', 'TIKETNUSA INDONESIA'),
-('contact_email', 'support@tiketnusa.id'),
-('contact_whatsapp', '+6281234567890');
+('qris_merchant_name', 'CELEBES EVENT INDONESIA'),
+('contact_email', 'support@celebes-event.com'),
+('contact_whatsapp', '+6281241129988');

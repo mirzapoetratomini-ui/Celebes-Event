@@ -197,7 +197,7 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({
       slug,
       category,
       bannerImage,
-      shortDescription: shortDescription || 'Event spektakuler diselenggarakan oleh kreator profesional TiketNusa.',
+      shortDescription: shortDescription || 'Event spektakuler diselenggarakan oleh kreator profesional Celebes Event.',
       description: description || 'Ikuti rangkaian agenda dan nikmati pengalaman terbaik bersama pembicara dan peserta lainnya.',
       startDate,
       endDate,
@@ -312,9 +312,9 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({
     const raw = codeToVerify || scannerInputCode;
     if (!raw.trim()) return;
 
-    // Parse QR payload if full string formatted like TIKETNUSA:VERIFY:CODE:EVENT:EMAIL
+    // Parse QR payload if full string formatted like CELEBES:VERIFY:CODE:EVENT:EMAIL or legacy TIKETNUSA:VERIFY:CODE
     let code = raw.trim();
-    if (code.includes('TIKETNUSA:VERIFY:')) {
+    if (code.includes('CELEBES:VERIFY:') || code.includes('TIKETNUSA:VERIFY:')) {
       const parts = code.split(':');
       if (parts.length >= 3) {
         code = parts[2];

@@ -99,7 +99,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [mysqlHost, setMysqlHost] = useState('localhost');
   const [mysqlUser, setMysqlUser] = useState('u1234_dbuser');
   const [mysqlPass, setMysqlPass] = useState('');
-  const [mysqlDb, setMysqlDb] = useState('u1234_tiketnusa');
+  const [mysqlDb, setMysqlDb] = useState('u1234_celebesevent');
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [isTestingMysql, setIsTestingMysql] = useState(false);
 
@@ -233,7 +233,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Manual payment handlers for Super Admin
   const handleAdminApprove = async (order: Order) => {
     try {
-      await api.verifyPaymentOrder(order.id, 'paid', undefined, 'Super Admin TiketNusa');
+      await api.verifyPaymentOrder(order.id, 'paid', undefined, 'Super Admin Celebes Event');
       setAdminActionToast(`Pembayaran order ${order.orderNumber} disetujui! E-Ticket telah diaktifkan.`);
       setAdminPreviewProof(null);
       onRefreshData();
@@ -246,7 +246,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleAdminReject = async () => {
     if (!adminRejectOrder) return;
     try {
-      await api.verifyPaymentOrder(adminRejectOrder.id, 'payment_rejected', adminRejectReason, 'Super Admin TiketNusa');
+      await api.verifyPaymentOrder(adminRejectOrder.id, 'payment_rejected', adminRejectReason, 'Super Admin Celebes Event');
       setAdminActionToast(`Pembayaran order ${adminRejectOrder.orderNumber} telah ditolak.`);
       setAdminRejectOrder(null);
       setAdminPreviewProof(null);
@@ -347,7 +347,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-400/30">
                 Super Admin Control Center
               </span>
-              <span className="text-xs text-slate-400 font-mono">TiketNusa Platform Management</span>
+              <span className="text-xs text-slate-400 font-mono">Celebes Event Platform Management</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               Portal Kendali Penuh Super Admin
@@ -386,7 +386,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {formatRupiah(totalPlatformFees)}
             </span>
             <span className="text-[10px] text-slate-400 mt-1 block">
-              Biaya layanan TiketNusa
+              Biaya layanan Celebes Event
             </span>
           </div>
 
@@ -1127,7 +1127,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="flex items-center gap-2">
                 <a
                   href="/api/export-sql"
-                  download="tiketnusa_mysql.sql"
+                  download="celebes_event_mysql.sql"
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
@@ -1190,7 +1190,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="text"
                       value={mysqlDb}
                       onChange={(e) => setMysqlDb(e.target.value)}
-                      placeholder="u1234_tiketnusa"
+                      placeholder="u1234_celebesevent"
                       className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
                     />
                   </div>
@@ -1541,7 +1541,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 border-b pb-3">
                 <Image className="w-4 h-4 text-purple-600" />
-                4. Tampilan Beranda & Banner Utama (GoEvent Style)
+                4. Tampilan Beranda & Banner Utama (Celebes Event Style)
               </h3>
 
               <div className="space-y-3 text-xs">
@@ -1796,7 +1796,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="border-b pb-3 flex items-center gap-2">
                 <Layers className="w-5 h-5 text-blue-600" />
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">6. Pengaturan 4 Langkah Mudah Dapatkan Tiket (GoEvent Style)</h3>
+                  <h3 className="text-sm font-bold text-slate-900">6. Pengaturan 4 Langkah Mudah Dapatkan Tiket (Celebes Event)</h3>
                   <p className="text-xs text-slate-500">Sesuaikan judul, nomor urut, dan deskripsi panduan yang tampil di beranda depan</p>
                 </div>
               </div>
@@ -1850,7 +1850,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="border-b pb-3 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-indigo-600" />
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">7. Pengaturan Paket Layanan (Price List Paket - GoEvent)</h3>
+                  <h3 className="text-sm font-bold text-slate-900">7. Pengaturan Paket Layanan (Price List Paket - Celebes Event)</h3>
                   <p className="text-xs text-slate-500">Kelola 3 paket layanan: Platform Only (Rp500rb), Event Berbayar (2%), dan On Site Registration (Rp2jt)</p>
                 </div>
               </div>
@@ -2245,7 +2245,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           qrisConfig: { ...settingsForm.qrisConfig, merchantId: e.target.value },
                         })
                       }
-                      placeholder="Contoh: M-TIKETNUSA-882190"
+                      placeholder="Contoh: M-CELEBES-882190"
                       className="w-full p-2.5 rounded-xl border border-slate-300 font-mono text-slate-900"
                     />
                   </div>
@@ -2351,7 +2351,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               <div className="space-y-3 text-xs text-slate-300 leading-relaxed">
                 <p>
-                  TiketNusa mendukung penerimaan pembayaran otomatis berstandar <strong>QRIS Nasional</strong> (Bank Indonesia). Peserta dapat membayar menggunakan aplikasi m-Banking manapun:
+                  Celebes Event mendukung penerimaan pembayaran otomatis berstandar <strong>QRIS Nasional</strong> (Bank Indonesia). Peserta dapat membayar menggunakan aplikasi m-Banking manapun:
                 </p>
                 <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold">
                   <div className="bg-white/10 p-2 rounded-lg">• BCA Mobile & Sakuku</div>

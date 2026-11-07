@@ -574,8 +574,8 @@ export const HelpCenterModal: React.FC<HelpCenterModalProps> = ({ isOpen, onClos
 
         {/* Footer info */}
         <div className="bg-gray-50 border-t border-gray-200 px-6 py-3 text-xs text-gray-500 flex flex-wrap items-center justify-between gap-2">
-          <span>{settings?.platformName || 'TiketNusa'} • Layanan Bantuan Resmi</span>
-          <span>Jam Layanan: Senin - Minggu (08:00 - 22:00 WIB)</span>
+          <span>{settings?.platformName || 'Celebes Event'} • Layanan Bantuan Resmi</span>
+          <span>Jam Layanan: Senin - Minggu (08:00 - 22:00 WITA)</span>
         </div>
       </div>
     </div>

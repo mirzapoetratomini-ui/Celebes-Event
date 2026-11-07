@@ -37,14 +37,14 @@ export const SocialLoginModal: React.FC<SocialLoginModalProps> = ({
     const simulatedUser: User = {
       id: `usr-${provider}-${Date.now().toString().slice(-6)}`,
       email: currentUser.email || `${provider}.user@gmail.com`,
-      name: name.trim() || (selectedRole === 'creator' ? 'Kreator Festiva Digital' : 'Peserta Aktif TiketNusa'),
+      name: name.trim() || (selectedRole === 'creator' ? 'Celebes Creative Organizer' : 'Peserta Aktif Celebes Event'),
       role: selectedRole,
       avatar:
         provider === 'google'
           ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80'
           : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
       phone: '0812' + Math.floor(10000000 + Math.random() * 90000000),
-      organization: organization || (selectedRole === 'creator' ? 'Nusantara Creative Organizer' : 'Umum / Mahasiswa'),
+      organization: organization || (selectedRole === 'creator' ? 'Celebes Creative Organizer' : 'Umum / Mahasiswa'),
       auth_provider: provider as any,
       status: 'active',
       createdAt: new Date().toISOString(),
@@ -89,7 +89,7 @@ export const SocialLoginModal: React.FC<SocialLoginModalProps> = ({
           <div>
             <h3 className="text-lg font-bold flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-blue-400" />
-              {isRegistering ? 'Daftar Akun TiketNusa' : 'Masuk ke TiketNusa'}
+              {isRegistering ? 'Daftar Akun Celebes Event' : 'Masuk ke Celebes Event'}
             </h3>
             <p className="text-xs text-slate-300 mt-0.5">
               Autentikasi instan melalui Google & Akun Sosial Media

@@ -151,7 +151,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setSimulatedVaNumber(vaNum);
 
     try {
-      const qrisPayload = `00020101021226610014ID.LINKAJA.WWW01189360091800000000000215${totals.totalAmount}53033605802ID5919TIKETNUSA PLATFORM6007JAKARTA`;
+      const qrisPayload = `00020101021226610014ID.LINKAJA.WWW01189360091800000000000215${totals.totalAmount}53033605802ID5920CELEBES EVENT PLATFORM6008MAKASSAR`;
       const qrUrl = await QRCode.toDataURL(qrisPayload, { width: 240, margin: 2 });
       setSimulatedQrisUrl(qrUrl);
     } catch {
@@ -470,7 +470,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       type="text"
                       value={voucherCodeInput}
                       onChange={(e) => setVoucherCodeInput(e.target.value.toUpperCase())}
-                      placeholder="Masukkan kode voucher (Contoh: TIKETNUSAHEMAT)"
+                      placeholder="Masukkan kode voucher (Contoh: CELEBESKEREN)"
                       className="flex-1 px-3 py-2 text-xs font-mono uppercase border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                     />
                     <button
