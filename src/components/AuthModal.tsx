@@ -414,51 +414,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* ======================================================== */}
           {modalMode === 'login' && (
             <div className="space-y-4">
-              
-              {/* SUPER ADMIN DEDICATED CREDENTIAL CARD */}
-              <div className="p-4 rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 via-indigo-50/50 to-white text-slate-900 space-y-2.5 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-xs">
-                      <Crown className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-extrabold text-purple-950 flex items-center gap-1.5">
-                        Super Admin Akun Utama
-                        <span className="text-[10px] bg-purple-200 text-purple-900 px-1.5 py-0.2 rounded font-mono font-bold">
-                          Owner
-                        </span>
-                      </h4>
-                      <p className="text-[11px] text-purple-700 font-medium">
-                        redaksibergulircom@gmail.com
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full font-bold">
-                    Wajib Password
-                  </span>
-                </div>
-
-                <div className="text-[11px] text-slate-600 bg-white/80 p-2.5 rounded-xl border border-purple-100 space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Email:</span>
-                    <span className="font-mono font-bold text-slate-800">redaksibergulircom@gmail.com</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Password Resmi:</span>
-                    <span className="font-mono font-bold text-purple-700">Bergulir2026!#</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleFillCredentials('admin')}
-                  className="w-full py-2 px-3 bg-purple-100 hover:bg-purple-200 text-purple-900 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <KeyRound className="w-3.5 h-3.5 text-purple-700" />
-                  <span>Isi Otomatis Kredensial Super Admin ke Form</span>
-                </button>
-              </div>
 
               {loginError && (
                 <div className="p-3 bg-rose-50 text-rose-700 text-xs rounded-xl flex items-center gap-2 border border-rose-200 font-medium">

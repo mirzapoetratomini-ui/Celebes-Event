@@ -255,6 +255,15 @@ export const api = {
     return await res.json();
   },
 
+  async deleteUser(id: string): Promise<{ success: boolean; message: string; userId?: string }> {
+    const res = await fetch(`/api/users/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || data.message || 'Gagal menghapus pengguna');
+    return data;
+  },
+
   // Platform Settings & Branding
   async getSettings(): Promise<PlatformSettings> {
     try {

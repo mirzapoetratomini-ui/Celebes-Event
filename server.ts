@@ -24,7 +24,20 @@ process.on('unhandledRejection', (reason) => {
   console.error('[Process] Unhandled rejection:', reason);
 });
 
-const APP_ROOT = process.env.PASSENGER_APP_ROOT || process.cwd();
+import { fileURLToPath } from 'url';
+
+let detectedDir = process.cwd();
+try {
+  if (typeof __dirname !== 'undefined') {
+    detectedDir = __dirname;
+  } else if (import.meta && import.meta.url) {
+    detectedDir = path.dirname(fileURLToPath(import.meta.url));
+  }
+} catch {
+  detectedDir = process.cwd();
+}
+
+const APP_ROOT = process.env.PASSENGER_APP_ROOT || detectedDir || process.cwd();
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -793,6 +806,39 @@ app.put('/api/users/:id/status', (req: Request, res: Response) => {
   });
 });
 
+// Hapus Akun oleh Super Admin
+app.delete('/api/users/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  // Protect primary Super Admin accounts from accidental deletion
+  if (id === 'usr-admin-bergulir' || id === 'usr-admin-01' || id === 'redaksibergulircom@gmail.com') {
+    return res.status(403).json({ success: false, error: 'Akun Super Admin Utama dilindungi dan tidak dapat dihapus!' });
+  }
+
+  const userIndex = memoryUsers.findIndex(u => u.id === id || u.email === id);
+  if (userIndex === -1) {
+    return res.status(404).json({ success: false, error: 'Pengguna tidak ditemukan' });
+  }
+
+  const deletedUser = memoryUsers[userIndex];
+  memoryUsers.splice(userIndex, 1);
+
+  saveLocalData();
+
+  // If MySQL is active, also delete from MySQL
+  if (isMysqlActive && mysqlPool) {
+    mysqlPool.execute('DELETE FROM users WHERE id = ? OR email = ?', [id, id]).catch((err: any) => {
+      console.warn('[Database] Gagal menghapus pengguna dari MySQL:', err.message);
+    });
+  }
+
+  res.json({
+    success: true,
+    message: `Akun "${deletedUser.name}" (${deletedUser.email}) berhasil dihapus secara permanen.`,
+    userId: deletedUser.id,
+  });
+});
+
 // Riwayat Notifikasi Email Masuk / Terkirim
 app.get('/api/admin/sent-emails', (_req: Request, res: Response) => {
   res.json(memorySentEmails);
@@ -924,8 +970,22 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.resolve(APP_ROOT, 'dist');
+    const candidateDistPaths = [
+      path.resolve(APP_ROOT, 'dist'),
+      path.resolve(detectedDir, 'dist'),
+      path.resolve(process.cwd(), 'dist'),
+      path.resolve('./dist')
+    ];
+    const distPath = candidateDistPaths.find(p => fs.existsSync(path.resolve(p, 'index.html'))) || candidateDistPaths[0];
+    
+    // Serve static files
     app.use(express.static(distPath));
+
+    // Fallback for missing static assets to prevent returning index.html for .js/.css
+    app.use('/assets', (_req: Request, res: Response) => {
+      res.status(404).send('Asset not found');
+    });
+
     app.get('*', (_req: Request, res: Response) => {
       const indexPath = path.resolve(distPath, 'index.html');
       if (fs.existsSync(indexPath)) {
@@ -933,11 +993,31 @@ async function startServer() {
       } else {
         res.status(200).send(`
           <!DOCTYPE html>
-          <html>
-            <head><meta charset="utf-8"><title>Celebes Event</title></head>
-            <body style="font-family:sans-serif;text-align:center;padding:50px;">
-              <h2>✅ Celebes Event Server Berhasil Aktif!</h2>
-              <p>Backend Node.js & MySQL siap melayani request.</p>
+          <html lang="id">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Celebes Event - Status Server</title>
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; text-align: center; }
+                .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 36px; max-width: 520px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
+                h2 { color: #38bdf8; margin-top: 0; font-size: 22px; }
+                p { color: #94a3b8; line-height: 1.6; font-size: 14px; }
+                .badge { display: inline-block; background: #059669; color: #fff; font-size: 12px; font-weight: bold; padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; }
+                .code { background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 13px; color: #38bdf8; text-align: left; margin: 16px 0; }
+              </style>
+            </head>
+            <body>
+              <div class="card">
+                <span class="badge">Node.js Server Berjalan</span>
+                <h2>Celebes Event Siap Digunakan!</h2>
+                <p>Backend server berhasil aktif. Namun folder tampilan frontend <code>dist/</code> belum terkompilasi di hosting.</p>
+                <div class="code">
+                  # Jalankan perintah ini di Terminal cPanel:<br>
+                  <strong>npm run build</strong>
+                </div>
+                <p style="font-size: 13px;">Setelah build selesai, refresh halaman ini atau restart Node.js app di cPanel.</p>
+              </div>
             </body>
           </html>
         `);

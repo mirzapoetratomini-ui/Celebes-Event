@@ -50,8 +50,8 @@ import { INITIAL_USERS, INITIAL_EVENTS, INITIAL_ORDERS, INITIAL_PAYOUTS, DEFAULT
 import { api } from './services/api';
 
 export default function App() {
-  // Current logged in user (default to Super Admin for immediate management preview)
-  const [currentUser, setCurrentUser] = useState<User | null>(INITIAL_USERS[0]);
+  // Pengunjung publik default (tampilan beranda katalog event tanpa auto-login)
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<'browse' | 'my-tickets' | 'creator-studio' | 'admin-portal'>('browse');
 
   // Platform Settings & Branding (Super Admin Managed)

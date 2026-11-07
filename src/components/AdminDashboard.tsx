@@ -139,6 +139,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
+  // State Hapus Akun oleh Super Admin
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const [deleteUserError, setDeleteUserError] = useState<string | null>(null);
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    setIsDeletingUser(true);
+    setDeleteUserError(null);
+    try {
+      const res = await api.deleteUser(userToDelete.id);
+      setApprovalActionToast(res.message);
+      setUserToDelete(null);
+      onRefreshData();
+      setTimeout(() => setApprovalActionToast(null), 4000);
+    } catch (err: any) {
+      setDeleteUserError(err.message || 'Gagal menghapus akun pengguna');
+    } finally {
+      setIsDeletingUser(false);
+    }
+  };
+
   const [mysqlHost, setMysqlHost] = useState('localhost');
   const [mysqlUser, setMysqlUser] = useState('bergulir_dbuser');
   const [mysqlPass, setMysqlPass] = useState('');
@@ -1116,8 +1138,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <Mail className="w-3 h-3" />
                                     <span>Kirim Ulang Email</span>
                                   </button>
+                                ) : null}
+
+                                {/* Tombol Hapus Akun oleh Super Admin */}
+                                {u.id !== 'usr-admin-bergulir' && u.id !== 'usr-admin-01' && u.email !== 'redaksibergulircom@gmail.com' ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setUserToDelete(u);
+                                      setDeleteUserError(null);
+                                    }}
+                                    className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-semibold border border-rose-200 flex items-center gap-1 transition-colors cursor-pointer"
+                                    title="Hapus akun pengguna ini secara permanen dari sistem"
+                                  >
+                                    <Trash2 className="w-3 h-3 text-rose-600" />
+                                    <span>Hapus</span>
+                                  </button>
                                 ) : (
-                                  <span className="text-slate-400 text-[11px]">-</span>
+                                  <span className="text-[10px] text-purple-700 font-bold px-1.5 py-0.5 bg-purple-50 rounded border border-purple-200">
+                                    Akun Utama
+                                  </span>
                                 )}
                               </div>
                             </td>
@@ -1129,6 +1169,62 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             )}
           </div>
+
+          {/* MODAL KONFIRMASI HAPUS AKUN PENGGUNA */}
+          {userToDelete && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+              <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+                <div className="p-6 text-center space-y-4">
+                  <div className="w-14 h-14 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto border border-rose-200">
+                    <Trash2 className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">Konfirmasi Hapus Akun</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Apakah Anda yakin ingin menghapus akun pengguna ini secara permanen? Tindakan ini tidak dapat dibatalkan.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-left text-xs space-y-1">
+                    <div className="font-bold text-slate-900">{userToDelete.name}</div>
+                    <div className="text-slate-600 font-mono text-[11px]">{userToDelete.email}</div>
+                    {userToDelete.organization && (
+                      <div className="text-slate-500 text-[11px]">🏢 {userToDelete.organization}</div>
+                    )}
+                    <div className="text-[10px] text-slate-500 uppercase font-semibold mt-1">
+                      Peran: {userToDelete.role === 'admin' ? 'Super Admin' : userToDelete.role === 'creator' ? 'Kreator Event' : 'Peserta'}
+                    </div>
+                  </div>
+
+                  {deleteUserError && (
+                    <div className="p-2.5 bg-rose-50 text-rose-700 rounded-xl text-xs font-medium border border-rose-200">
+                      {deleteUserError}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <button
+                      type="button"
+                      disabled={isDeletingUser}
+                      onClick={() => setUserToDelete(null)}
+                      className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isDeletingUser}
+                      onClick={handleDeleteUser}
+                      className="py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>{isDeletingUser ? 'Menghapus...' : 'Ya, Hapus Akun'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* MODAL PREVIEW SURAT NOTIFIKASI EMAIL */}
           {selectedEmailPreview && (
