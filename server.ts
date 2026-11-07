@@ -10,9 +10,20 @@ import { verifyAndCheckInTicket } from './src/utils/ticketing-logic';
 
 dotenv.config();
 
-const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+// Port 3000 in AI Studio / dev mode, or process.env.PORT when deployed in production hosting
+const PORT = process.env.NODE_ENV === 'production' && process.env.PORT
+  ? (Number(process.env.PORT) || 3000)
+  : 3000;
 const isProduction = process.env.NODE_ENV === 'production';
+const app = express();
+
+process.on('uncaughtException', (err) => {
+  console.error('[Process] Uncaught exception:', err);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[Process] Unhandled rejection:', reason);
+});
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -88,7 +99,7 @@ async function initMysql() {
 
   if (host && user && database) {
     try {
-      mysqlPool = mysql.createPool({
+      const pool = mysql.createPool({
         host,
         port,
         user,
@@ -100,13 +111,18 @@ async function initMysql() {
         connectTimeout: 4000,
       });
 
-      const connection = await mysqlPool.getConnection();
+      const connection = await pool.getConnection();
       await connection.ping();
       connection.release();
+      mysqlPool = pool;
       isMysqlActive = true;
       mysqlLastError = '';
       console.log(`[Database] Terkoneksi ke MySQL Host: ${host}, Database: ${database}`);
     } catch (err: any) {
+      if (mysqlPool) {
+        try { await mysqlPool.end(); } catch {}
+      }
+      mysqlPool = null;
       isMysqlActive = false;
       mysqlLastError = err?.message || 'Gagal terhubung ke MySQL';
       console.warn(`[Database] MySQL tidak aktif atau belum siap (${mysqlLastError}). Menggunakan penyimpanan in-memory yang stabil.`);
@@ -563,7 +579,10 @@ app.post('/api/faqs', (req: Request, res: Response) => {
 async function startServer() {
   if (!isProduction) {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: false,
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);

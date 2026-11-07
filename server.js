@@ -755,9 +755,15 @@ function verifyAndCheckInTicket(ticket, nowIso = (/* @__PURE__ */ new Date()).to
 
 // server.ts
 dotenv.config();
-var app = express();
-var PORT = Number(process.env.PORT) || 3e3;
+var PORT = process.env.NODE_ENV === "production" && process.env.PORT ? Number(process.env.PORT) || 3e3 : 3e3;
 var isProduction = process.env.NODE_ENV === "production";
+var app = express();
+process.on("uncaughtException", (err) => {
+  console.error("[Process] Uncaught exception:", err);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("[Process] Unhandled rejection:", reason);
+});
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 var LOCAL_STORAGE_FILE = path.resolve(process.cwd(), "database", "local_data.json");
@@ -822,7 +828,7 @@ async function initMysql() {
   const port = Number(process.env.MYSQL_PORT) || 3306;
   if (host && user && database) {
     try {
-      mysqlPool = mysql.createPool({
+      const pool = mysql.createPool({
         host,
         port,
         user,
@@ -833,13 +839,21 @@ async function initMysql() {
         queueLimit: 0,
         connectTimeout: 4e3
       });
-      const connection = await mysqlPool.getConnection();
+      const connection = await pool.getConnection();
       await connection.ping();
       connection.release();
+      mysqlPool = pool;
       isMysqlActive = true;
       mysqlLastError = "";
       console.log(`[Database] Terkoneksi ke MySQL Host: ${host}, Database: ${database}`);
     } catch (err) {
+      if (mysqlPool) {
+        try {
+          await mysqlPool.end();
+        } catch {
+        }
+      }
+      mysqlPool = null;
       isMysqlActive = false;
       mysqlLastError = err?.message || "Gagal terhubung ke MySQL";
       console.warn(`[Database] MySQL tidak aktif atau belum siap (${mysqlLastError}). Menggunakan penyimpanan in-memory yang stabil.`);
@@ -1219,7 +1233,10 @@ app.post("/api/faqs", (req, res) => {
 async function startServer() {
   if (!isProduction) {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: false
+      },
       appType: "spa"
     });
     app.use(vite.middlewares);
