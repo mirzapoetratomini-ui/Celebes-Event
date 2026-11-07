@@ -5,8 +5,11 @@
 -- Target: cPanel / VPS / Shared Hosting / Docker
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS `celebes_event_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `celebes_event_db`;
+-- CATATAN HOSTING / cPANEL:
+-- Baris CREATE DATABASE dan USE dinonaktifkan agar 100% kompatibel dengan shared hosting (cPanel prefix).
+-- Database otomatis digunakan sesuai database yang Anda klik di phpMyAdmin.
+-- CREATE DATABASE IF NOT EXISTS `celebes_event_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE `celebes_event_db`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `attendee_responses`;
