@@ -179,10 +179,52 @@ export const api = {
     return await res.json();
   },
 
-  // Users
+  // Users & Authentication
   async getUsers(): Promise<User[]> {
     const res = await fetch('/api/users');
     if (!res.ok) throw new Error('Gagal memuat pengguna');
+    return await res.json();
+  },
+
+  async registerCreator(payload: Partial<User>): Promise<{ success: boolean; user: User; message: string }> {
+    const res = await fetch('/api/auth/register-creator', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || 'Gagal mendaftar kreator');
+    return data;
+  },
+
+  async registerUser(payload: Partial<User>): Promise<{ success: boolean; user: User; message: string }> {
+    const res = await fetch('/api/auth/register-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || 'Gagal mendaftar');
+    return data;
+  },
+
+  async login(email: string, password?: string): Promise<{ success: boolean; user: User; message: string }> {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || 'Gagal masuk');
+    return data;
+  },
+
+  async updateUserStatus(id: string, status: string): Promise<{ success: boolean; user: User; message: string }> {
+    const res = await fetch(`/api/users/${id}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
     return await res.json();
   },
 

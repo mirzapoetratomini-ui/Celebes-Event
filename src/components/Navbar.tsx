@@ -16,7 +16,7 @@ import { User, UserRole, PlatformSettings } from '../types';
 
 interface NavbarProps {
   currentUser: User | null;
-  onOpenLoginModal: () => void;
+  onOpenLoginModal: (mode?: 'login' | 'register_creator' | 'register_user') => void;
   onLogout: () => void;
   onOpenCreateEvent: () => void;
   activeTab: 'browse' | 'my-tickets' | 'creator-studio' | 'admin-portal';
@@ -150,11 +150,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           ) : (
             <button
-              onClick={onOpenLoginModal}
-              className="hidden sm:flex px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-blue-600 hover:bg-slate-100 rounded-xl transition-colors items-center gap-1.5 cursor-pointer"
+              onClick={() => onOpenLoginModal('register_creator')}
+              className="hidden sm:flex px-3.5 py-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors items-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <Calendar className="w-4 h-4 text-blue-600" />
-              <span>Untuk Kreator Event</span>
+              <span>Daftar Jadi Kreator</span>
             </button>
           )}
 

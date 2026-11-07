@@ -2,10 +2,27 @@ import { User, EventItem, Order, Voucher, PayoutRequest, PlatformSettings, Suppo
 
 export const INITIAL_USERS: User[] = [
   {
+    id: 'usr-admin-bergulir',
+    email: 'redaksibergulircom@gmail.com',
+    name: 'Super Admin Bergulir Media',
+    role: 'admin',
+    password: 'Bergulir2026!#',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=256&q=80',
+    phone: '081241129988',
+    organization: 'Bergulir Media Network',
+    auth_provider: 'local' as any,
+    status: 'active',
+    bankName: 'BCA',
+    bankAccountNumber: '8880192831',
+    bankAccountName: 'BERGULIR MEDIA CELEBES',
+    createdAt: '2026-01-01T08:00:00Z',
+  },
+  {
     id: 'usr-admin-01',
     email: 'admin@celebes-event.com',
     name: 'Super Administrator Celebes Event',
     role: 'admin',
+    password: 'demo123',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
     phone: '081241129988',
     organization: 'Celebes Event Platform HQ',

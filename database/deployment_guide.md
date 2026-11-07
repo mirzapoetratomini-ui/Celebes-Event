@@ -59,9 +59,10 @@ APP_URL=https://nama-domain-anda.com
 
 ---
 
-## 4. Multi-Role Akun Bawaan untuk Uji Coba
+## 4. Multi-Role Akun Resmi & Bawaan
 
-- **Super Admin**: `admin@celebes-event.com` | Password: `demo123`
+- **Super Admin Utama (Pemilik)**: `redaksibergulircom@gmail.com` | Password: `Bergulir2026!#`
+- **Super Admin Alternatif**: `admin@celebes-event.com` | Password: `demo123`
 - **Kreator Event**: `kreator@celebescreative.id` | Password: `demo123`
 - **Peserta / User**: `budi.santoso@gmail.com` | Password: `demo123`
-- Tersedia tombol **Role Switcher** instan pada menu navigasi untuk mencoba semua hak akses tanpa repot login ulang.
+- Tersedia form pendaftaran mandiri calon kreator & fitur persetujuan instan di Super Admin.

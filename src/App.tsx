@@ -76,8 +76,14 @@ export default function App() {
   const [activeInvoiceTicket, setActiveInvoiceTicket] = useState<any>(null);
   const [shareEvent, setShareEvent] = useState<EventItem | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register_creator' | 'register_user'>('login');
   const [isHelpCenterOpen, setIsHelpCenterOpen] = useState(false);
   const [openFaqId, setOpenFaqId] = useState<string | null>('faq-01');
+
+  const handleOpenAuthModal = (mode: 'login' | 'register_creator' | 'register_user' = 'login') => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
 
   // Load server data with fallback
   const refreshAllData = async () => {
@@ -146,37 +152,14 @@ export default function App() {
         </div>
       )}
 
-      {/* Hosting Deployment Download Bar */}
-      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white py-2.5 px-4 shadow-md border-b border-emerald-500/30">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
-          <div className="flex items-center gap-2.5 text-center sm:text-left">
-            <span className="bg-white text-emerald-800 font-extrabold px-2.5 py-0.5 rounded-full text-[11px] uppercase tracking-wide shrink-0 shadow-xs">
-              Hosting cPanel
-            </span>
-            <span className="font-semibold text-emerald-50">
-              Paket Siap Pakai Subdomain <strong className="text-white underline">event.bergulir.com</strong> (Sudah Ada dist, node_modules, server.js & .env)
-            </span>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <a
-              href="/download-paket"
-              download="celebesevent-siap-pakai-eventbergulir.zip"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold rounded-lg text-xs shadow-md transition-transform active:scale-95 animate-pulse"
-            >
-              🚀 Download Paket Siap Pakai (Hanya 3.8 MB - Bebas Error)
-            </a>
-          </div>
-        </div>
-      </div>
-
       {/* Top Navbar - Clean, Professional Header */}
       <Navbar
         currentUser={currentUser}
-        onOpenLoginModal={() => setIsAuthModalOpen(true)}
+        onOpenLoginModal={handleOpenAuthModal}
         onLogout={handleLogout}
         onOpenCreateEvent={() => {
           if (!currentUser) {
-            setIsAuthModalOpen(true);
+            handleOpenAuthModal('register_creator');
             return;
           }
           setActiveTab('creator-studio');
@@ -748,20 +731,28 @@ export default function App() {
               platformSettings={platformSettings}
             />
           ) : (
-            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4 max-w-md mx-auto shadow-sm">
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
-                <Calendar className="w-7 h-7" />
+            <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center space-y-4 max-w-lg mx-auto shadow-sm">
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto shadow-inner">
+                <Calendar className="w-8 h-8" />
               </div>
-              <h2 className="text-lg font-bold text-slate-900">Akses Kreator Event</h2>
-              <p className="text-xs text-slate-500">
-                Silakan masuk sebagai Kreator atau Super Admin untuk mengelola event, form pendaftaran, dan peserta.
+              <h2 className="text-xl font-bold text-slate-900">Portal Kreator & Penyelenggara Event</h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Kelola penjualan tiket, buat formulir pendaftaran dinamis, pantau pencairan dana, dan scan QR tiket menggunakan HP panitia.
               </p>
-              <button
-                onClick={() => setIsAuthModalOpen(true)}
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
-              >
-                Masuk Portal Kreator
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+                <button
+                  onClick={() => handleOpenAuthModal('register_creator')}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 cursor-pointer transition-all"
+                >
+                  Daftar Calon Kreator Baru
+                </button>
+                <button
+                  onClick={() => handleOpenAuthModal('login')}
+                  className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Sudah Punya Akun? Masuk
+                </button>
+              </div>
             </div>
           )
         )}
@@ -1120,13 +1111,15 @@ export default function App() {
         event={shareEvent}
       />
 
-      {/* 5. Unified Login Modal for Super Admin, Admin, Creator, and Attendee */}
+      {/* 5. Unified Login & Registration Modal (Creator Onboarding, Super Admin, User) */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         currentUser={currentUser}
+        initialMode={authModalMode}
         onLoginSuccess={(user) => {
           setCurrentUser(user);
+          refreshAllData();
           if (user.role === 'admin') setActiveTab('admin-portal');
           else if (user.role === 'creator') setActiveTab('creator-studio');
           else setActiveTab('my-tickets');

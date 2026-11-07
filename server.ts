@@ -496,9 +496,162 @@ app.put('/api/payouts/:id', (req: Request, res: Response) => {
   res.json(payout);
 });
 
-// 8. Users Management
+// 8. Users & Authentication Management
 app.get('/api/users', (_req: Request, res: Response) => {
   res.json(memoryUsers);
+});
+
+// Pendaftaran Calon Kreator Event (Creator Onboarding)
+app.post('/api/auth/register-creator', (req: Request, res: Response) => {
+  const { 
+    name, 
+    organization, 
+    email, 
+    phone, 
+    password, 
+    category, 
+    city, 
+    bankName, 
+    bankAccountNumber, 
+    bankAccountName, 
+    instagram, 
+    portfolioUrl 
+  } = req.body;
+
+  if (!email || !organization || !name) {
+    return res.status(400).json({ success: false, message: 'Nama penanggung jawab, nama organisasi/EO, dan email wajib diisi!' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+
+  // Check if email already registered
+  const existingUser = memoryUsers.find(u => u.email.toLowerCase() === cleanEmail);
+  if (existingUser) {
+    return res.status(400).json({ success: false, message: 'Email ini sudah terdaftar sebagai pengguna! Silakan gunakan email lain atau login langsung.' });
+  }
+
+  const newCreator: User = {
+    id: `usr-creator-${Date.now()}`,
+    email: cleanEmail,
+    name: name.trim(),
+    role: 'creator',
+    password: password || 'kreator123',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
+    phone: phone || '',
+    organization: organization.trim(),
+    category: category || 'Konser Musik & Festival',
+    city: city || 'Makassar / Sulawesi',
+    bankName: bankName || 'BCA',
+    bankAccountNumber: bankAccountNumber || '',
+    bankAccountName: bankAccountName || name,
+    instagram: instagram || '',
+    portfolioUrl: portfolioUrl || '',
+    auth_provider: 'local',
+    status: 'active', // Langsung aktif siap buat event
+    createdAt: new Date().toISOString(),
+  };
+
+  memoryUsers.unshift(newCreator);
+  saveLocalData();
+
+  res.status(201).json({
+    success: true,
+    user: newCreator,
+    message: `Pendaftaran kreator "${organization}" berhasil! Akun Anda aktif dan siap membuat event.`,
+  });
+});
+
+// Pendaftaran Peserta Umum
+app.post('/api/auth/register-user', (req: Request, res: Response) => {
+  const { name, email, phone, password } = req.body;
+  if (!name || !email) {
+    return res.status(400).json({ success: false, message: 'Nama dan email wajib diisi!' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const existing = memoryUsers.find(u => u.email.toLowerCase() === cleanEmail);
+  if (existing) {
+    return res.status(400).json({ success: false, message: 'Email sudah terdaftar. Silakan login.' });
+  }
+
+  const newUser: User = {
+    id: `usr-user-${Date.now()}`,
+    email: cleanEmail,
+    name: name.trim(),
+    role: 'user',
+    password: password || 'demo123',
+    phone: phone || '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80',
+    auth_provider: 'local',
+    status: 'active',
+    createdAt: new Date().toISOString(),
+  };
+
+  memoryUsers.unshift(newUser);
+  saveLocalData();
+
+  res.status(201).json({ success: true, user: newUser, message: 'Pendaftaran akun berhasil!' });
+});
+
+// Otentikasi Login (Mendukung Super Admin redaksibergulircom@gmail.com dan Kreator)
+app.post('/api/auth/login', (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  if (!email) {
+    return res.status(400).json({ success: false, message: 'Masukkan alamat email Anda' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+
+  // Special match for Super Admin redaksibergulircom@gmail.com
+  if (cleanEmail === 'redaksibergulircom@gmail.com' || cleanEmail === 'admin@celebes-event.com' || cleanEmail.includes('admin')) {
+    const adminUser = memoryUsers.find(u => u.role === 'admin' && (u.email.toLowerCase() === cleanEmail || u.id === 'usr-admin-bergulir')) || memoryUsers[0];
+    
+    // Check password if provided (allow Bergulir2026!# or demo123)
+    if (password && password !== 'Bergulir2026!#' && password !== 'demo123' && adminUser.password && adminUser.password !== password) {
+      return res.status(401).json({ success: false, message: 'Password Super Admin salah!' });
+    }
+
+    return res.json({ success: true, user: adminUser, message: 'Login Super Admin Berhasil!' });
+  }
+
+  // Find user in registered list
+  const user = memoryUsers.find(u => u.email.toLowerCase() === cleanEmail);
+  if (user) {
+    if (user.password && password && user.password !== password) {
+      return res.status(401).json({ success: false, message: 'Password yang Anda masukkan salah.' });
+    }
+    return res.json({ success: true, user, message: `Selamat datang kembali, ${user.name}!` });
+  }
+
+  // Fallback auto-provision if demo login
+  const fallbackRole = cleanEmail.includes('kreator') || cleanEmail.includes('creator') ? 'creator' : 'user';
+  const autoUser: User = {
+    id: `usr-${Date.now().toString().slice(-6)}`,
+    email: cleanEmail,
+    name: cleanEmail.split('@')[0].replace(/[._]/g, ' ').toUpperCase(),
+    role: fallbackRole,
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80',
+    auth_provider: 'local',
+    status: 'active',
+    createdAt: new Date().toISOString(),
+  };
+
+  memoryUsers.push(autoUser);
+  saveLocalData();
+  return res.json({ success: true, user: autoUser, message: `Selamat datang, ${autoUser.name}!` });
+});
+
+// Status Moderasi Kreator / User oleh Super Admin
+app.put('/api/users/:id/status', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const user = memoryUsers.find(u => u.id === id);
+  if (!user) {
+    return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
+  }
+  user.status = status;
+  saveLocalData();
+  res.json({ success: true, user, message: `Status pengguna berhasil diubah menjadi ${status}.` });
 });
 
 // 9. Platform Settings & Branding
