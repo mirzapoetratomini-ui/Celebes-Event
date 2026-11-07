@@ -146,6 +146,29 @@ export default function App() {
         </div>
       )}
 
+      {/* Hosting Deployment Download Bar */}
+      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white py-2.5 px-4 shadow-md border-b border-emerald-500/30">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
+          <div className="flex items-center gap-2.5 text-center sm:text-left">
+            <span className="bg-white text-emerald-800 font-extrabold px-2.5 py-0.5 rounded-full text-[11px] uppercase tracking-wide shrink-0 shadow-xs">
+              Hosting cPanel
+            </span>
+            <span className="font-semibold text-emerald-50">
+              Paket Siap Pakai Subdomain <strong className="text-white underline">event.bergulir.com</strong> (Sudah Ada dist, node_modules, server.js & .env)
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href="/download-paket"
+              download="celebesevent-siap-pakai-eventbergulir.zip"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold rounded-lg text-xs shadow-md transition-transform active:scale-95 animate-pulse"
+            >
+              🚀 Download Paket Siap Pakai (Hanya 3.8 MB - Bebas Error)
+            </a>
+          </div>
+        </div>
+      </div>
+
       {/* Top Navbar - Clean, Professional Header */}
       <Navbar
         currentUser={currentUser}

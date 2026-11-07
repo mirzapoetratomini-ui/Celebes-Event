@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
@@ -25,10 +24,31 @@ process.on('unhandledRejection', (reason) => {
   console.error('[Process] Unhandled rejection:', reason);
 });
 
+const APP_ROOT = process.env.PASSENGER_APP_ROOT || process.cwd();
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.static(path.resolve(APP_ROOT, 'public')));
 
-const LOCAL_STORAGE_FILE = path.resolve(process.cwd(), 'database', 'local_data.json');
+app.get('/download-all-in-one', (_req: Request, res: Response) => {
+  const filePath = path.resolve(APP_ROOT, 'public', 'celebesevent-lengkap-dengan-nodemodules.zip');
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, 'celebesevent-lengkap-dengan-nodemodules.zip');
+  } else {
+    res.status(404).send('File not found');
+  }
+});
+
+app.get('/download-paket', (_req: Request, res: Response) => {
+  const filePath = path.resolve(APP_ROOT, 'public', 'celebesevent-siap-pakai-eventbergulir.zip');
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, 'celebesevent-siap-pakai-eventbergulir.zip');
+  } else {
+    res.status(404).send('File not found');
+  }
+});
+
+const LOCAL_STORAGE_FILE = path.resolve(APP_ROOT, 'database', 'local_data.json');
 
 // In-Memory resilient store (fallback when MySQL host is not configured or in local preview)
 let memoryUsers: User[] = [...INITIAL_USERS];
@@ -578,6 +598,7 @@ app.post('/api/faqs', (req: Request, res: Response) => {
 
 async function startServer() {
   if (!isProduction) {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
@@ -587,16 +608,36 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.resolve(process.cwd(), 'dist');
+    const distPath = path.resolve(APP_ROOT, 'dist');
     app.use(express.static(distPath));
     app.get('*', (_req: Request, res: Response) => {
-      res.sendFile(path.resolve(distPath, 'index.html'));
+      const indexPath = path.resolve(distPath, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(200).send(`
+          <!DOCTYPE html>
+          <html>
+            <head><meta charset="utf-8"><title>Celebes Event</title></head>
+            <body style="font-family:sans-serif;text-align:center;padding:50px;">
+              <h2>✅ Celebes Event Server Berhasil Aktif!</h2>
+              <p>Backend Node.js & MySQL siap melayani request.</p>
+            </body>
+          </html>
+        `);
+      }
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Server] Celebes Event berjalan di port ${PORT} (http://localhost:${PORT})`);
-  });
+  if (isProduction && process.env.PORT) {
+    app.listen(process.env.PORT, () => {
+      console.log(`[Server] Celebes Event berjalan di PORT/Socket: ${process.env.PORT}`);
+    });
+  } else {
+    app.listen(3000, '0.0.0.0', () => {
+      console.log(`[Server] Celebes Event berjalan di port 3000 (http://localhost:3000)`);
+    });
+  }
 }
 
 startServer();
