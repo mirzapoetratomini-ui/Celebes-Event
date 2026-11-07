@@ -48943,8 +48943,32 @@ async function startServer() {
     ];
     const distPath = candidateDistPaths.find((p) => fs.existsSync(path.resolve(p, "index.html"))) || candidateDistPaths[0];
     app.use(import_express.default.static(distPath));
-    app.use("/assets", (_req, res) => {
-      res.status(404).send("Asset not found");
+    const assetCandidateDirs = [
+      path.resolve(distPath, "assets"),
+      path.resolve(APP_ROOT, "dist", "assets"),
+      path.resolve(detectedDir, "dist", "assets"),
+      path.resolve(APP_ROOT, "assets"),
+      path.resolve(detectedDir, "assets"),
+      path.resolve(process.cwd(), "assets"),
+      path.resolve(APP_ROOT, "public", "assets")
+    ];
+    for (const dir of assetCandidateDirs) {
+      if (fs.existsSync(dir)) {
+        app.use("/assets", import_express.default.static(dir, {
+          maxAge: "1d",
+          setHeaders: (res, filePath) => {
+            if (filePath.endsWith(".js")) {
+              res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+            } else if (filePath.endsWith(".css")) {
+              res.setHeader("Content-Type", "text/css; charset=utf-8");
+            }
+          }
+        }));
+      }
+    }
+    app.use("/assets", (req, res) => {
+      console.warn(`[Static] Asset tidak ditemukan: ${req.originalUrl}`);
+      res.status(404).type("text/plain").send("Asset not found");
     });
     app.get("*", (_req, res) => {
       const indexPath = path.resolve(distPath, "index.html");

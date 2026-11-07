@@ -978,12 +978,39 @@ async function startServer() {
     ];
     const distPath = candidateDistPaths.find(p => fs.existsSync(path.resolve(p, 'index.html'))) || candidateDistPaths[0];
     
-    // Serve static files
+    // Serve static files from distPath
     app.use(express.static(distPath));
 
+    // Multiple fallback paths for static assets in cPanel environments
+    const assetCandidateDirs = [
+      path.resolve(distPath, 'assets'),
+      path.resolve(APP_ROOT, 'dist', 'assets'),
+      path.resolve(detectedDir, 'dist', 'assets'),
+      path.resolve(APP_ROOT, 'assets'),
+      path.resolve(detectedDir, 'assets'),
+      path.resolve(process.cwd(), 'assets'),
+      path.resolve(APP_ROOT, 'public', 'assets'),
+    ];
+
+    for (const dir of assetCandidateDirs) {
+      if (fs.existsSync(dir)) {
+        app.use('/assets', express.static(dir, {
+          maxAge: '1d',
+          setHeaders: (res, filePath) => {
+            if (filePath.endsWith('.js')) {
+              res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+            } else if (filePath.endsWith('.css')) {
+              res.setHeader('Content-Type', 'text/css; charset=utf-8');
+            }
+          }
+        }));
+      }
+    }
+
     // Fallback for missing static assets to prevent returning index.html for .js/.css
-    app.use('/assets', (_req: Request, res: Response) => {
-      res.status(404).send('Asset not found');
+    app.use('/assets', (req: Request, res: Response) => {
+      console.warn(`[Static] Asset tidak ditemukan: ${req.originalUrl}`);
+      res.status(404).type('text/plain').send('Asset not found');
     });
 
     app.get('*', (_req: Request, res: Response) => {
