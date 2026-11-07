@@ -179,7 +179,7 @@ app.post('/api/test-mysql', async (req: Request, res: Response) => {
   }
 });
 
-// 2. Export / Download MySQL Schema
+// 2. Export / Download MySQL Schema & Deploy Package
 app.get('/api/export-sql', (_req: Request, res: Response) => {
   const schemaPath = path.resolve(process.cwd(), 'database', 'schema.sql');
   if (fs.existsSync(schemaPath)) {
@@ -189,6 +189,15 @@ app.get('/api/export-sql', (_req: Request, res: Response) => {
     res.send(sqlContent);
   } else {
     res.status(404).json({ error: 'File schema.sql tidak ditemukan' });
+  }
+});
+
+app.get('/api/download-package', (_req: Request, res: Response) => {
+  const packagePath = path.resolve(process.cwd(), 'public', 'celebes-event-production.tar.gz');
+  if (fs.existsSync(packagePath)) {
+    res.download(packagePath, 'celebes-event-production.tar.gz');
+  } else {
+    res.status(404).json({ error: 'Paket arsip celebes-event-production.tar.gz sedang dibuat' });
   }
 });
 

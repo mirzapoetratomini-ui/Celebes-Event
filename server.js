@@ -910,6 +910,14 @@ app.get("/api/export-sql", (_req, res) => {
     res.status(404).json({ error: "File schema.sql tidak ditemukan" });
   }
 });
+app.get("/api/download-package", (_req, res) => {
+  const packagePath = path.resolve(process.cwd(), "public", "celebes-event-production.tar.gz");
+  if (fs.existsSync(packagePath)) {
+    res.download(packagePath, "celebes-event-production.tar.gz");
+  } else {
+    res.status(404).json({ error: "Paket arsip celebes-event-production.tar.gz sedang dibuat" });
+  }
+});
 app.get("/api/events", (req, res) => {
   const { category, search, status, creatorId } = req.query;
   let results = [...memoryEvents];

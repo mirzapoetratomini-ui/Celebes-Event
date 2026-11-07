@@ -1137,6 +1137,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href="/api/download-package"
+                  download="celebes-event-production.tar.gz"
+                  className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Unduh Paket Deploy (celebes-event-production.tar.gz)</span>
+                </a>
                 <button
                   type="button"
                   onClick={handleCopySql}
@@ -1148,10 +1156,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <a
                   href="/api/export-sql"
                   download="celebes_event_mysql.sql"
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Unduh celebes_event_mysql.sql</span>
+                  <span>Unduh SQL</span>
                 </a>
               </div>
             </div>
