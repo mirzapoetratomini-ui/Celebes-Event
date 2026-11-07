@@ -36,7 +36,7 @@ export const SocialLoginModal: React.FC<SocialLoginModalProps> = ({
 
     const simulatedUser: User = {
       id: `usr-${provider}-${Date.now().toString().slice(-6)}`,
-      email: currentUser.email || `${provider}.user@gmail.com`,
+      email: email || currentUser?.email || `${provider}.user@gmail.com`,
       name: name.trim() || (selectedRole === 'creator' ? 'Celebes Creative Organizer' : 'Peserta Aktif Celebes Event'),
       role: selectedRole,
       avatar:
@@ -45,16 +45,20 @@ export const SocialLoginModal: React.FC<SocialLoginModalProps> = ({
           : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
       phone: '0812' + Math.floor(10000000 + Math.random() * 90000000),
       organization: organization || (selectedRole === 'creator' ? 'Celebes Creative Organizer' : 'Umum / Mahasiswa'),
-      auth_provider: provider as any,
-      status: 'active',
+      auth_provider: provider,
+      status: selectedRole === 'creator' ? 'pending_approval' : 'active',
       createdAt: new Date().toISOString(),
     };
 
-    setNotification(`Berhasil terhubung melalui ${providerNames[provider]} sebagai ${selectedRole.toUpperCase()}!`);
+    if (selectedRole === 'creator') {
+      setNotification(`Pendaftaran akun kreator via ${providerNames[provider]} berhasil! Akun Anda berstatus Menunggu Persetujuan Admin Pusat.`);
+    } else {
+      setNotification(`Berhasil terhubung melalui ${providerNames[provider]} sebagai ${selectedRole.toUpperCase()}!`);
+    }
     setTimeout(() => {
       onLoginSuccess(simulatedUser);
       onClose();
-    }, 900);
+    }, 1100);
   };
 
   const handleEmailAuth = (e: React.FormEvent) => {

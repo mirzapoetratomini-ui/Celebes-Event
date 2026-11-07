@@ -1,4 +1,4 @@
-import { User, EventItem, Order, Voucher, PayoutRequest, PlatformSettings, SupportTicket, FaqItem } from '../types';
+import { User, EventItem, Order, Voucher, PayoutRequest, PlatformSettings, SupportTicket, FaqItem, SentEmailNotification } from '../types';
 
 export const INITIAL_USERS: User[] = [
   {
@@ -10,7 +10,7 @@ export const INITIAL_USERS: User[] = [
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=256&q=80',
     phone: '081241129988',
     organization: 'Bergulir Media Network',
-    auth_provider: 'local' as any,
+    auth_provider: 'local',
     status: 'active',
     bankName: 'BCA',
     bankAccountNumber: '8880192831',
@@ -26,7 +26,7 @@ export const INITIAL_USERS: User[] = [
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
     phone: '081241129988',
     organization: 'Celebes Event Platform HQ',
-    auth_provider: 'local' as any,
+    auth_provider: 'local',
     status: 'active',
     bankName: 'BCA',
     bankAccountNumber: '8880192831',
@@ -38,10 +38,11 @@ export const INITIAL_USERS: User[] = [
     email: 'kreator@celebescreative.id',
     name: 'Celebes Creative Promosindo',
     role: 'creator',
+    password: 'kreator123',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
     phone: '081398765432',
     organization: 'Celebes Creative Promosindo',
-    auth_provider: 'google' as any,
+    auth_provider: 'google',
     status: 'active',
     bankName: 'Bank Mandiri',
     bankAccountNumber: '1370019283746',
@@ -49,18 +50,70 @@ export const INITIAL_USERS: User[] = [
     createdAt: '2026-02-10T11:30:00Z',
   },
   {
+    id: 'usr-creator-pending',
+    email: 'makassarmusic@gmail.com',
+    name: 'Andi Rahmat Pratama',
+    role: 'creator',
+    password: 'kreator123',
+    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=256&q=80',
+    phone: '081299887766',
+    organization: 'Makassar Live Music Festival EO',
+    category: 'Konser Musik & Festival',
+    city: 'Makassar',
+    auth_provider: 'google',
+    status: 'pending_approval',
+    bankName: 'BCA',
+    bankAccountNumber: '7729182390',
+    bankAccountName: 'Andi Rahmat Pratama',
+    createdAt: '2026-03-05T09:15:00Z',
+  },
+  {
     id: 'usr-user-01',
     email: 'budi.santoso@gmail.com',
     name: 'Budi Santoso',
     role: 'user',
+    password: 'demo123',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80',
     phone: '085712345678',
-    organization: 'Universitas Indonesia',
-    auth_provider: 'google' as any,
+    organization: 'Universitas Hasanuddin',
+    auth_provider: 'google',
     status: 'active',
     createdAt: '2026-03-01T14:20:00Z',
   },
 ];
+
+export const INITIAL_SENT_EMAILS: SentEmailNotification[] = [
+  {
+    id: 'eml-seed-01',
+    recipientEmail: 'kreator@celebescreative.id',
+    recipientName: 'Celebes Creative Promosindo',
+    recipientRole: 'creator',
+    subject: '🎉 Selamat! Akun Kreator Celebes Event Anda Telah Disetujui Admin Pusat',
+    bodyHtml: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+      <div style="background: linear-gradient(135deg, #1e3a8a, #4338ca); padding: 20px; border-radius: 8px; text-align: center; color: #ffffff;">
+        <h1 style="margin: 0; font-size: 20px;">Celebes Event</h1>
+        <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.9;">Pemberitahuan Persetujuan Akun Kreator</p>
+      </div>
+      <div style="padding: 24px 0; color: #1e293b; line-height: 1.6;">
+        <p>Halo <strong>Celebes Creative Promosindo</strong>,</p>
+        <p>Kabar gembira! Permohonan pendaftaran akun kreator event Anda telah <strong>berhasil diverifikasi dan DISETUJUI</strong> oleh Tim Super Admin Celebes Event.</p>
+        <div style="background: #f8fafc; border-left: 4px solid #10b981; padding: 16px; margin: 16px 0; border-radius: 4px;">
+          <p style="margin: 0; font-weight: bold; color: #065f46;">Status Akun: AKTIF & SIAP MEMBUAT EVENT</p>
+          <p style="margin: 4px 0 0 0; font-size: 13px; color: #475569;">Anda kini memiliki akses penuh untuk menerbitkan event, mengatur tiket berbayar/gratis, kustomisasi formulir pendaftaran, dan sistem check-in QR scanner.</p>
+        </div>
+        <p>Silakan login ke platform menggunakan akun Google atau email Anda untuk mulai membuat event pertama Anda.</p>
+      </div>
+      <div style="border-top: 1px solid #e2e8f0; padding-top: 16px; font-size: 12px; color: #64748b; text-align: center;">
+        <p>Email ini dikirim otomatis oleh Celebes Event Management System.<br>Hubungi redaksibergulircom@gmail.com jika membutuhkan bantuan.</p>
+      </div>
+    </div>`,
+    type: 'creator_approved',
+    sentAt: '2026-02-10T12:00:00Z',
+    status: 'delivered',
+    sender: 'Super Admin Pusat Celebes Event <noreply@celebes-event.com>',
+  },
+];
+
 
 export const INITIAL_EVENTS: EventItem[] = [
   {

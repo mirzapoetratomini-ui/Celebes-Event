@@ -179,6 +179,13 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({
   // Handle Event Creation submit
   const handleCreateEventSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (currentUser.role === 'creator' && currentUser.status === 'pending_approval') {
+      setActionMessage({
+        type: 'error',
+        text: 'Akun Anda sedang menunggu persetujuan dari Super Admin Pusat. Anda belum diizinkan membuat event.',
+      });
+      return;
+    }
     if (!title) {
       alert('Judul event wajib diisi!');
       return;
@@ -444,6 +451,38 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* PENDING APPROVAL WARNING BANNER */}
+      {currentUser.role === 'creator' && currentUser.status === 'pending_approval' && (
+        <div className="bg-amber-50 border-2 border-amber-400 p-5 rounded-3xl shadow-sm text-slate-900 animate-in fade-in">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+              <Clock className="w-5 h-5 animate-pulse" />
+            </div>
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base font-extrabold text-amber-950">
+                  Akun Kreator Anda Sedang Menunggu Persetujuan Admin Pusat
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-200 text-amber-900 border border-amber-300">
+                  Status: Pending Approval
+                </span>
+              </div>
+              <p className="text-xs text-amber-900 leading-relaxed">
+                Pendaftaran akun atas nama <strong>{currentUser.organization || currentUser.name}</strong> ({currentUser.email}) telah kami terima dan saat ini sedang dalam proses verifikasi oleh Tim Super Admin Celebes Event.
+              </p>
+              <div className="p-3 bg-white/80 rounded-xl border border-amber-200 text-xs text-slate-700 space-y-1">
+                <p className="font-bold text-slate-800 text-[11px]">SOP & Alur Persetujuan:</p>
+                <ul className="list-disc list-inside space-y-0.5 text-[11px] text-slate-600">
+                  <li>Admin pusat akan meninjau kelayakan profil penyelenggara.</li>
+                  <li>Setelah diverifikasi dan disetujui, <strong>notifikasi email persetujuan resmi akan otomatis masuk ke {currentUser.email}</strong>.</li>
+                  <li>Setelah disetujui, hak akses penerbitan event, form pendaftaran peserta, scan QR scanner, dan pencairan dana akan aktif seketika.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Banner & Stats Overview */}
       <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -464,11 +503,26 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setActiveTab('create-event')}
-              className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-blue-500/25 flex items-center gap-2 transition-all cursor-pointer"
+              onClick={() => {
+                if (currentUser.status === 'pending_approval') {
+                  setActionMessage({
+                    type: 'error',
+                    text: 'Fitur pembuatan event dikunci sementara hingga akun Anda disetujui oleh Super Admin Pusat.',
+                  });
+                  return;
+                }
+                setActiveTab('create-event');
+              }}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md flex items-center gap-2 transition-all cursor-pointer ${
+                currentUser.status === 'pending_approval'
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-500/25'
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-blue-500/25'
+              }`}
             >
               <PlusCircle className="w-4 h-4" />
-              <span>Buat Event & Form Baru</span>
+              <span>
+                {currentUser.status === 'pending_approval' ? 'Buat Event (Menunggu Persetujuan)' : 'Buat Event & Form Baru'}
+              </span>
             </button>
           </div>
         </div>
@@ -690,7 +744,51 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({
       )}
 
       {/* TAB CONTENT 2: BUAT EVENT & FORM DINAMIS */}
-      {activeTab === 'create-event' && (
+      {activeTab === 'create-event' && currentUser.status === 'pending_approval' && (
+        <div className="bg-white rounded-3xl border-2 border-amber-300 p-8 shadow-sm text-center max-w-2xl mx-auto space-y-4 my-8">
+          <div className="w-16 h-16 rounded-3xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto shadow-xs">
+            <Clock className="w-8 h-8 animate-pulse" />
+          </div>
+          <div className="space-y-1">
+            <span className="px-3 py-1 bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold rounded-full">
+              Status: Menunggu Persetujuan Admin Pusat
+            </span>
+            <h2 className="text-xl font-extrabold text-slate-900 mt-2">
+              Fitur Pembuatan Event Terkunci Sementara
+            </h2>
+            <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+              Pendaftaran akun Anda atas nama <strong>{currentUser.organization || currentUser.name}</strong> ({currentUser.email}) sedang dalam antrean verifikasi oleh Super Admin Pusat.
+            </p>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl text-xs text-left text-slate-700 space-y-2 max-w-lg mx-auto">
+            <p className="font-bold text-slate-900 text-xs">Informasi Proses Verifikasi:</p>
+            <div className="flex items-start gap-2 text-[11px] text-slate-600">
+              <span className="font-bold text-blue-600 shrink-0">1.</span>
+              <span>Super Admin Pusat akan memverifikasi kelayakan profil EO / lembaga Anda di sistem.</span>
+            </div>
+            <div className="flex items-start gap-2 text-[11px] text-slate-600">
+              <span className="font-bold text-blue-600 shrink-0">2.</span>
+              <span>Setelah disetujui, <strong>surat pemberitahuan resmi otomatis dikirimkan ke email {currentUser.email}</strong>.</span>
+            </div>
+            <div className="flex items-start gap-2 text-[11px] text-slate-600">
+              <span className="font-bold text-blue-600 shrink-0">3.</span>
+              <span>Setelah persetujuan diberikan, formulir pembuatan event ini akan langsung terbuka dan aktif.</span>
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <button
+              onClick={() => setActiveTab('events')}
+              className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            >
+              Kembali ke Ringkasan Dashboard
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'create-event' && currentUser.status !== 'pending_approval' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
           <div className="border-b border-slate-200 pb-4 mb-6">
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">

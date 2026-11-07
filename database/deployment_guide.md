@@ -59,10 +59,27 @@ APP_URL=https://nama-domain-anda.com
 
 ---
 
-## 4. Multi-Role Akun Resmi & Bawaan
+## 4. Akun Resmi Bawaan & Wajib Password
 
-- **Super Admin Utama (Pemilik)**: `redaksibergulircom@gmail.com` | Password: `Bergulir2026!#`
+Seluruh login sistem sekarang menerapkan verifikasi keamanan password:
+
+- **Super Admin Utama (Pemilik Pusat)**: `redaksibergulircom@gmail.com` | Password: `Bergulir2026!#`
 - **Super Admin Alternatif**: `admin@celebes-event.com` | Password: `demo123`
-- **Kreator Event**: `kreator@celebescreative.id` | Password: `demo123`
-- **Peserta / User**: `budi.santoso@gmail.com` | Password: `demo123`
-- Tersedia form pendaftaran mandiri calon kreator & fitur persetujuan instan di Super Admin.
+- **Kreator Event Aktif**: `kreator@celebescreative.id` | Password: `kreator123`
+- **Kreator Menunggu Persetujuan (Pending Approval)**: `makassarmusic@gmail.com` | Password: `kreator123`
+- **Peserta / Pendaftar**: `budi.santoso@gmail.com` | Password: `demo123`
+
+---
+
+## 5. Alur Pendaftaran Kreator Google & Persetujuan Admin Pusat
+
+1. **Pendaftaran Akun Google**: Calon Kreator dapat mendaftar langsung menggunakan Akun Google ("Daftar Kreator dengan Akun Google").
+2. **Status Menunggu Persetujuan (`pending_approval`)**:
+   - Setelah mendaftar, kreator berstatus *Menunggu Persetujuan* dari Admin Pusat.
+   - Kreator tidak dapat mempublikasikan event hingga disetujui.
+3. **Persetujuan oleh Admin Pusat**:
+   - Super Admin membuka menu **Pengguna & Kreator** > sub-tab **Menunggu Persetujuan**.
+   - Admin memeriksa profil lalu menekan tombol **"Setujui & Kirim Email"**.
+4. **Notifikasi Email Otomatis**:
+   - Sistem secara otomatis mengirimkan surat email resmi persetujuan & aktivasi akun ke alamat email Kreator.
+   - Admin dapat meninjau isi email di sub-tab **Log Email Persetujuan Terkirim** serta pratinjau surat email HTML.

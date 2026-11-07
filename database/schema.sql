@@ -23,6 +23,7 @@ DROP TABLE IF EXISTS `users`;
 DROP TABLE IF EXISTS `support_tickets`;
 DROP TABLE IF EXISTS `faqs`;
 DROP TABLE IF EXISTS `system_settings`;
+DROP TABLE IF EXISTS `email_notifications`;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ------------------------------------------------------------
@@ -39,7 +40,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `organization` VARCHAR(191) NULL,
   `auth_provider` ENUM('local', 'google', 'facebook', 'twitter') NOT NULL DEFAULT 'local',
   `provider_id` VARCHAR(191) NULL,
-  `status` ENUM('active', 'suspended', 'pending') NOT NULL DEFAULT 'active',
+  `status` ENUM('active', 'suspended', 'pending', 'pending_approval') NOT NULL DEFAULT 'active',
   `bank_name` VARCHAR(100) NULL,
   `bank_account_number` VARCHAR(100) NULL,
   `bank_account_name` VARCHAR(191) NULL,
@@ -282,14 +283,34 @@ CREATE TABLE IF NOT EXISTS `system_settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
+-- Table 13: email_notifications (Log Notifikasi Email Resmi)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `email_notifications` (
+  `id` VARCHAR(50) NOT NULL,
+  `recipient_email` VARCHAR(191) NOT NULL,
+  `recipient_name` VARCHAR(191) NOT NULL,
+  `subject` VARCHAR(255) NOT NULL,
+  `body_html` LONGTEXT NOT NULL,
+  `sent_at` DATETIME NOT NULL,
+  `status` ENUM('sent', 'failed') NOT NULL DEFAULT 'sent',
+  `type` VARCHAR(50) NOT NULL DEFAULT 'creator_approval',
+  `user_id` VARCHAR(50) NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_email_recipient` (`recipient_email`),
+  KEY `idx_email_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
 -- SEED DATA AWAL (Initial Sample Records Celebes Event)
 -- ------------------------------------------------------------
 
--- 1. Users: Super Admin, Creator, User
+-- 1. Users: Super Admin, Creator, User, Pending Creator
 INSERT INTO `users` (`id`, `email`, `name`, `password_hash`, `role`, `avatar`, `phone`, `organization`, `auth_provider`, `status`, `bank_name`, `bank_account_number`, `bank_account_name`) VALUES
 ('usr-admin-bergulir', 'redaksibergulircom@gmail.com', 'Super Admin Bergulir Media', 'Bergulir2026!#', 'admin', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=256&q=80', '081241129988', 'Bergulir Media Network', 'local', 'active', 'BCA', '8880192831', 'BERGULIR MEDIA CELEBES'),
 ('usr-admin-01', 'admin@celebes-event.com', 'Super Administrator Celebes Event', 'demo123', 'admin', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80', '081241129988', 'Celebes Event Platform HQ', 'local', 'active', 'BCA', '8880192831', 'PT CELEBES EVENT NUSANTARA'),
-('usr-creator-01', 'kreator@celebescreative.id', 'Celebes Creative Promosindo', 'demo123', 'creator', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80', '081398765432', 'Celebes Creative Promosindo', 'google', 'active', 'Bank Mandiri', '1370019283746', 'Celebes Creative Promosindo'),
+('usr-creator-01', 'kreator@celebescreative.id', 'Celebes Creative Promosindo', 'kreator123', 'creator', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80', '081398765432', 'Celebes Creative Promosindo', 'google', 'active', 'Bank Mandiri', '1370019283746', 'Celebes Creative Promosindo'),
+('usr-creator-pending', 'makassarmusic@gmail.com', 'Makassar Indie Movement', 'kreator123', 'creator', 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=256&q=80', '081234567890', 'Makassar Indie Movement', 'google', 'pending_approval', 'BCA', '7890123456', 'MAKASSAR INDIE MOVEMENT'),
 ('usr-user-01', 'budi.santoso@gmail.com', 'Budi Santoso', 'demo123', 'user', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80', '085712345678', 'Universitas Hasanuddin Makassar', 'google', 'active', NULL, NULL, NULL);
 
 -- 2. Events
@@ -356,3 +377,7 @@ INSERT INTO `system_settings` (`setting_key`, `setting_value`) VALUES
 ('qris_merchant_name', 'CELEBES EVENT INDONESIA'),
 ('contact_email', 'support@celebes-event.com'),
 ('contact_whatsapp', '+6281241129988');
+
+-- 12. Email Notifications Log
+INSERT INTO `email_notifications` (`id`, `recipient_email`, `recipient_name`, `subject`, `body_html`, `sent_at`, `status`, `type`, `user_id`) VALUES
+('notif-001', 'kreator@celebescreative.id', 'Celebes Creative Promosindo', 'Selamat! Akun Kreator Anda Telah Disetujui - Celebes Event', '<p>Selamat! Akun Kreator Anda di Celebes Event telah disetujui oleh Super Admin.</p>', NOW(), 'sent', 'creator_approval', 'usr-creator-01');

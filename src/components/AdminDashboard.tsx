@@ -39,7 +39,7 @@ import {
   Trash2,
   FileText
 } from 'lucide-react';
-import { EventItem, Order, PayoutRequest, User, DatabaseStatus, PlatformSettings, SupportTicket, FaqItem } from '../types';
+import { EventItem, Order, PayoutRequest, User, DatabaseStatus, PlatformSettings, SupportTicket, FaqItem, SentEmailNotification } from '../types';
 import { DEFAULT_PLATFORM_SETTINGS } from '../data/seedData';
 import { formatRupiah } from '../utils/ticketing-logic';
 import { api } from '../services/api';
@@ -94,6 +94,50 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [adminRejectOrder, setAdminRejectOrder] = useState<Order | null>(null);
   const [adminRejectReason, setAdminRejectReason] = useState('Nominal transfer tidak sesuai tagihan / mutasi bank belum terdata');
   const [adminActionToast, setAdminActionToast] = useState<string | null>(null);
+
+  // Creator Approval & Moderation State
+  const [userSubTab, setUserSubTab] = useState<'all' | 'pending' | 'creators' | 'emails'>('all');
+  const [sentEmails, setSentEmails] = useState<SentEmailNotification[]>([]);
+  const [selectedEmailPreview, setSelectedEmailPreview] = useState<SentEmailNotification | null>(null);
+  const [isApprovingUserId, setIsApprovingUserId] = useState<string | null>(null);
+  const [approvalActionToast, setApprovalActionToast] = useState<string | null>(null);
+
+  const pendingCreators = users.filter(u => u.role === 'creator' && u.status === 'pending_approval');
+  const pendingCreatorsCount = pendingCreators.length;
+
+  const fetchSentEmails = async () => {
+    try {
+      const logs = await api.getSentEmails();
+      if (logs) setSentEmails(logs);
+    } catch {}
+  };
+
+  const handleApproveCreator = async (userId: string) => {
+    setIsApprovingUserId(userId);
+    try {
+      const res = await api.approveCreator(userId);
+      setApprovalActionToast(res.message);
+      onRefreshData();
+      await fetchSentEmails();
+      setTimeout(() => setApprovalActionToast(null), 5000);
+    } catch (err: any) {
+      setApprovalActionToast('Gagal menyetujui akun: ' + err.message);
+      setTimeout(() => setApprovalActionToast(null), 4000);
+    } finally {
+      setIsApprovingUserId(null);
+    }
+  };
+
+  const handleResendApprovalEmail = async (userId: string) => {
+    try {
+      const res = await api.resendApprovalEmail(userId);
+      setApprovalActionToast(res.message);
+      await fetchSentEmails();
+      setTimeout(() => setApprovalActionToast(null), 4000);
+    } catch (err: any) {
+      setApprovalActionToast('Gagal mengirim ulang email: ' + err.message);
+    }
+  };
 
   const [mysqlHost, setMysqlHost] = useState('localhost');
   const [mysqlUser, setMysqlUser] = useState('bergulir_dbuser');
@@ -153,6 +197,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   useEffect(() => {
     fetchDbInfo();
     fetchSettingsAndSupport();
+    fetchSentEmails();
   }, []);
 
   useEffect(() => {
@@ -459,7 +504,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           }`}
         >
           <Users className="w-4 h-4" />
-          <span>Pengguna & Multi-User</span>
+          <span>Pengguna & Kreator</span>
+          {pendingCreatorsCount > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950 animate-pulse">
+              {pendingCreatorsCount} Baru
+            </span>
+          )}
         </button>
 
         <button
@@ -739,55 +789,393 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* TAB 3: PENGGUNA & MULTI-USER */}
+      {/* TAB 3: PENGGUNA, PERSETUJUAN KREATOR & LOG EMAIL */}
       {activeTab === 'users' && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-          <div className="border-b pb-4">
-            <h2 className="text-base font-bold text-slate-900">Pengguna Platform & Manajemen Hak Akses</h2>
-            <p className="text-xs text-slate-500">Mendukung multi-user: Super Admin, Kreator Event, dan Peserta / User</p>
+        <div className="space-y-4">
+          {/* Action Notification Toast */}
+          {approvalActionToast && (
+            <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl flex items-center gap-3 text-xs font-semibold shadow-xs animate-in fade-in">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <span>{approvalActionToast}</span>
+            </div>
+          )}
+
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4">
+              <div>
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-purple-600" />
+                  Manajemen Pengguna & Persetujuan Kreator Event
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Verifikasi pendaftaran kreator (Google / Formulir) dan otomatis kirim email konfirmasi resmi.
+                </p>
+              </div>
+
+              {pendingCreatorsCount > 0 && (
+                <div className="px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-xl flex items-center gap-2 text-xs text-amber-900 font-bold">
+                  <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
+                  <span>{pendingCreatorsCount} Kreator Baru Butuh Persetujuan!</span>
+                </div>
+              )}
+            </div>
+
+            {/* Sub-tabs Filter */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setUserSubTab('all')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-colors cursor-pointer ${
+                  userSubTab === 'all'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                Semua Pengguna ({users.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setUserSubTab('pending')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  userSubTab === 'pending'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>Menunggu Persetujuan</span>
+                {pendingCreatorsCount > 0 && (
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
+                    userSubTab === 'pending' ? 'bg-white text-amber-900' : 'bg-amber-600 text-white'
+                  }`}>
+                    {pendingCreatorsCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setUserSubTab('creators')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-colors cursor-pointer ${
+                  userSubTab === 'creators'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'
+                }`}
+              >
+                Kreator Event ({users.filter(u => u.role === 'creator').length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setUserSubTab('emails')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  userSubTab === 'emails'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'bg-purple-50 text-purple-800 hover:bg-purple-100 border border-purple-200'
+                }`}
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Log Email Persetujuan Terkirim ({sentEmails.length})</span>
+              </button>
+            </div>
+
+            {/* VIEW A: LOG EMAIL TERKIRIM */}
+            {userSubTab === 'emails' ? (
+              <div className="space-y-4">
+                <div className="p-3 bg-purple-50/60 rounded-xl border border-purple-100 text-xs text-purple-900 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-purple-600" />
+                    <span>Daftar notifikasi email resmi yang berhasil diterbitkan dan dikirim ke alamat email kreator.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={fetchSentEmails}
+                    className="font-bold text-purple-700 hover:underline flex items-center gap-1"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>Segarkan Log</span>
+                  </button>
+                </div>
+
+                {sentEmails.length === 0 ? (
+                  <div className="text-center py-10 text-slate-400 text-xs">
+                    Belum ada log email persetujuan yang terkirim.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 text-slate-700 font-bold border-b">
+                        <tr>
+                          <th className="p-3">Waktu Terkirim</th>
+                          <th className="p-3">Penerima Email</th>
+                          <th className="p-3">Subjek Pemberitahuan</th>
+                          <th className="p-3">Pengirim</th>
+                          <th className="p-3">Status</th>
+                          <th className="p-3 text-right">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {sentEmails.map((email) => (
+                          <tr key={email.id} className="hover:bg-slate-50">
+                            <td className="p-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                              {new Date(email.sentAt).toLocaleString('id-ID')}
+                            </td>
+                            <td className="p-3">
+                              <span className="font-bold text-slate-900 block">{email.recipientName}</span>
+                              <span className="font-mono text-[11px] text-blue-700">{email.recipientEmail}</span>
+                            </td>
+                            <td className="p-3 font-medium text-slate-800 max-w-xs truncate">
+                              {email.subject}
+                            </td>
+                            <td className="p-3 text-[11px] text-slate-500">
+                              Super Admin Pusat
+                            </td>
+                            <td className="p-3">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>Terkirim (Delivered)</span>
+                              </span>
+                            </td>
+                            <td className="p-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedEmailPreview(email)}
+                                className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold border border-purple-200 transition-colors cursor-pointer"
+                              >
+                                Lihat Isi Surat
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* VIEW B: TABEL PENGGUNA & MODERASI PERSETUJUAN */
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-700 font-bold border-b">
+                    <tr>
+                      <th className="p-3">Nama & Organisasi</th>
+                      <th className="p-3">Email & WhatsApp</th>
+                      <th className="p-3">Peran (Role)</th>
+                      <th className="p-3">Autentikasi</th>
+                      <th className="p-3">Status Akun</th>
+                      <th className="p-3 text-right">Aksi Super Admin</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {users
+                      .filter((u) => {
+                        if (userSubTab === 'pending') return u.status === 'pending_approval';
+                        if (userSubTab === 'creators') return u.role === 'creator';
+                        return true;
+                      })
+                      .map((u) => {
+                        const isPending = u.status === 'pending_approval';
+                        return (
+                          <tr
+                            key={u.id}
+                            className={`hover:bg-slate-50/80 transition-colors ${
+                              isPending ? 'bg-amber-50/40 border-l-4 border-l-amber-500' : ''
+                            }`}
+                          >
+                            <td className="p-3">
+                              <div className="flex items-center gap-2.5">
+                                <img
+                                  src={u.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80'}
+                                  alt={u.name}
+                                  className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-200"
+                                />
+                                <div>
+                                  <span className="font-bold text-slate-900 block">{u.name}</span>
+                                  {u.organization && (
+                                    <span className="text-[11px] text-slate-500 block">
+                                      🏢 {u.organization}
+                                    </span>
+                                  )}
+                                  {u.city && (
+                                    <span className="text-[10px] text-slate-400 block">
+                                      📍 {u.city}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="p-3">
+                              <span className="font-mono text-slate-800 block">{u.email}</span>
+                              <span className="text-[11px] text-slate-500">{u.phone || '-'}</span>
+                            </td>
+
+                            <td className="p-3">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                  u.role === 'admin'
+                                    ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                                    : u.role === 'creator'
+                                    ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                                    : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                }`}
+                              >
+                                {u.role === 'admin' ? 'SUPER ADMIN' : u.role === 'creator' ? 'KREATOR EVENT' : 'PESERTA'}
+                              </span>
+                            </td>
+
+                            <td className="p-3">
+                              {u.auth_provider === 'google' ? (
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-white text-slate-800 border border-slate-200 shadow-2xs">
+                                  <svg className="w-3 h-3" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                                  </svg>
+                                  Google Account
+                                </span>
+                              ) : (
+                                <span className="text-[11px] font-mono text-slate-500 uppercase">
+                                  Email & Password
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="p-3">
+                              {isPending ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                  <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
+                                  Menunggu Persetujuan
+                                </span>
+                              ) : u.status === 'suspended' ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                                  <XCircle className="w-3 h-3 text-rose-600" />
+                                  Ditangguhkan
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  Aktif & Resmi
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="p-3 text-right">
+                              <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                {isPending ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      disabled={isApprovingUserId === u.id}
+                                      onClick={() => handleApproveCreator(u.id)}
+                                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1 transition-all cursor-pointer"
+                                      title="Setujui pendaftaran kreator dan kirim email resmi"
+                                    >
+                                      <Check className="w-3.5 h-3.5" />
+                                      <span>
+                                        {isApprovingUserId === u.id ? 'Memproses...' : 'Setujui & Kirim Email'}
+                                      </span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        // Mock preview for unapproved
+                                        setSelectedEmailPreview({
+                                          id: 'preview-temp',
+                                          recipientEmail: u.email,
+                                          recipientName: u.name,
+                                          recipientRole: 'creator',
+                                          subject: `🎉 Selamat! Akun Kreator Celebes Event "${u.organization || u.name}" Telah Disetujui Admin Pusat`,
+                                          bodyHtml: `<div style="font-family: Arial, sans-serif; padding: 20px;">
+                                            <h2 style="color: #1e3a8a;">Pemberitahuan Persetujuan Resmi</h2>
+                                            <p>Yth. <strong>${u.name}</strong> (${u.organization || 'Kreator Event'}),</p>
+                                            <p>Akun Anda telah disetujui oleh Super Admin. Setelah disetujui, Anda dapat segera menerbitkan event dan tiket.</p>
+                                          </div>`,
+                                          type: 'creator_approved',
+                                          sentAt: new Date().toISOString(),
+                                          status: 'delivered',
+                                          sender: 'Super Admin Pusat Celebes Event <redaksibergulircom@gmail.com>',
+                                        });
+                                      }}
+                                      className="p-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
+                                      title="Lihat Pratinjau Surat Email Persetujuan"
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                    </button>
+                                  </>
+                                ) : u.role === 'creator' ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleResendApprovalEmail(u.id)}
+                                    className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200 flex items-center gap-1 transition-colors cursor-pointer"
+                                    title="Kirim ulang surat pemberitahuan ke email kreator"
+                                  >
+                                    <Mail className="w-3 h-3" />
+                                    <span>Kirim Ulang Email</span>
+                                  </button>
+                                ) : (
+                                  <span className="text-slate-400 text-[11px]">-</span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-700 font-bold border-b">
-                <tr>
-                  <th className="p-3">Nama</th>
-                  <th className="p-3">Email</th>
-                  <th className="p-3">Peran (Role)</th>
-                  <th className="p-3">Autentikasi</th>
-                  <th className="p-3">Organisasi</th>
-                  <th className="p-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {users.map(u => (
-                  <tr key={u.id} className="hover:bg-slate-50">
-                    <td className="p-3 font-bold text-slate-900 flex items-center gap-2">
-                      <img src={u.avatar} alt={u.name} className="w-7 h-7 rounded-full object-cover" />
-                      <span>{u.name}</span>
-                    </td>
-                    <td className="p-3 text-slate-600">{u.email}</td>
-                    <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        u.role === 'admin'
-                          ? 'bg-purple-100 text-purple-800'
-                          : u.role === 'creator'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-emerald-100 text-emerald-800'
-                      }`}>
-                        {u.role.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="p-3 uppercase font-mono text-[10px] text-slate-500">{u.auth_provider || 'local'}</td>
-                    <td className="p-3 text-slate-600">{u.organization || '-'}</td>
-                    <td className="p-3">
-                      <span className="text-emerald-600 font-bold text-[11px]">Aktif</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* MODAL PREVIEW SURAT NOTIFIKASI EMAIL */}
+          {selectedEmailPreview && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+              <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+                <div className="px-6 py-4 bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-5 h-5 text-blue-400" />
+                    <div>
+                      <h3 className="text-sm font-bold text-white">Pratinjau Surat Email Notifikasi Masuk</h3>
+                      <p className="text-[11px] text-slate-300">Diterima oleh: {selectedEmailPreview.recipientEmail}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedEmailPreview(null)}
+                    className="p-1 text-slate-300 hover:text-white"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="p-6 overflow-y-auto space-y-4 text-xs">
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1 font-mono text-[11px]">
+                    <div><strong>Kepada:</strong> {selectedEmailPreview.recipientName} &lt;{selectedEmailPreview.recipientEmail}&gt;</div>
+                    <div><strong>Dari:</strong> {selectedEmailPreview.sender}</div>
+                    <div><strong>Subjek:</strong> {selectedEmailPreview.subject}</div>
+                    <div><strong>Waktu Kirim:</strong> {new Date(selectedEmailPreview.sentAt).toLocaleString('id-ID')}</div>
+                  </div>
+
+                  <div className="border border-slate-200 rounded-2xl p-4 bg-white shadow-2xs">
+                    <div dangerouslySetInnerHTML={{ __html: selectedEmailPreview.bodyHtml }} />
+                  </div>
+                </div>
+
+                <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedEmailPreview(null)}
+                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold"
+                  >
+                    Tutup Pratinjau
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

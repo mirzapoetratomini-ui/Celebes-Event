@@ -1,4 +1,4 @@
-import { EventItem, Order, PayoutRequest, Ticket, Voucher, DatabaseStatus, User, PlatformSettings, SupportTicket, FaqItem } from '../types';
+import { EventItem, Order, PayoutRequest, Ticket, Voucher, DatabaseStatus, User, PlatformSettings, SupportTicket, FaqItem, SentEmailNotification } from '../types';
 import { DEFAULT_PLATFORM_SETTINGS } from '../data/seedData';
 
 export const api = {
@@ -219,11 +219,38 @@ export const api = {
     return data;
   },
 
-  async updateUserStatus(id: string, status: string): Promise<{ success: boolean; user: User; message: string }> {
+  async updateUserStatus(id: string, status: string): Promise<{ success: boolean; user: User; message: string; email?: SentEmailNotification }> {
     const res = await fetch(`/api/users/${id}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
+    });
+    return await res.json();
+  },
+
+  async approveCreator(id: string): Promise<{ success: boolean; user: User; email?: SentEmailNotification; message: string }> {
+    const res = await fetch(`/api/users/${id}/approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return await res.json();
+  },
+
+  async getSentEmails(): Promise<SentEmailNotification[]> {
+    try {
+      const res = await fetch('/api/admin/sent-emails');
+      if (!res.ok) throw new Error('Gagal memuat log email');
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async resendApprovalEmail(userId: string): Promise<{ success: boolean; email?: SentEmailNotification; message: string }> {
+    const res = await fetch('/api/admin/resend-approval-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
     });
     return await res.json();
   },

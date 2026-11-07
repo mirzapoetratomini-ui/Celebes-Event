@@ -3,8 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
 import mysql from 'mysql2/promise';
-import { INITIAL_USERS, INITIAL_EVENTS, INITIAL_ORDERS, INITIAL_VOUCHERS, INITIAL_PAYOUTS, DEFAULT_PLATFORM_SETTINGS, INITIAL_SUPPORT_TICKETS, INITIAL_FAQS } from './src/data/seedData';
-import { EventItem, Order, User, Voucher, PayoutRequest, Ticket, PlatformSettings, SupportTicket, FaqItem } from './src/types';
+import { INITIAL_USERS, INITIAL_EVENTS, INITIAL_ORDERS, INITIAL_VOUCHERS, INITIAL_PAYOUTS, DEFAULT_PLATFORM_SETTINGS, INITIAL_SUPPORT_TICKETS, INITIAL_FAQS, INITIAL_SENT_EMAILS } from './src/data/seedData';
+import { EventItem, Order, User, Voucher, PayoutRequest, Ticket, PlatformSettings, SupportTicket, FaqItem, SentEmailNotification } from './src/types';
 import { verifyAndCheckInTicket } from './src/utils/ticketing-logic';
 
 dotenv.config();
@@ -59,6 +59,58 @@ let memoryPayouts: PayoutRequest[] = JSON.parse(JSON.stringify(INITIAL_PAYOUTS))
 let memorySettings: PlatformSettings = JSON.parse(JSON.stringify(DEFAULT_PLATFORM_SETTINGS));
 let memorySupportTickets: SupportTicket[] = JSON.parse(JSON.stringify(INITIAL_SUPPORT_TICKETS));
 let memoryFaqs: FaqItem[] = JSON.parse(JSON.stringify(INITIAL_FAQS));
+let memorySentEmails: SentEmailNotification[] = JSON.parse(JSON.stringify(INITIAL_SENT_EMAILS));
+
+function generateCreatorApprovalEmail(user: User): SentEmailNotification {
+  return {
+    id: `eml-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+    recipientEmail: user.email,
+    recipientName: user.name,
+    recipientRole: 'creator',
+    subject: `🎉 Selamat! Akun Kreator Celebes Event "${user.organization || user.name}" Telah Disetujui Admin Pusat`,
+    bodyHtml: `<div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background: #ffffff; color: #0f172a;">
+      <div style="background: linear-gradient(135deg, #1e3a8a, #4338ca); padding: 28px 24px; border-radius: 12px; text-align: center; color: #ffffff;">
+        <span style="display: inline-block; padding: 4px 12px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 8px;">CELEBES EVENT • NOTIFIKASI RESMI</span>
+        <h1 style="margin: 0; font-size: 22px; font-weight: 800;">Pemberitahuan Persetujuan Akun Kreator</h1>
+        <p style="margin: 6px 0 0 0; font-size: 13px; opacity: 0.9;">Platform Manajemen Event & E-Ticket Resmi Indonesia</p>
+      </div>
+
+      <div style="padding: 24px 8px; line-height: 1.6;">
+        <p style="font-size: 15px; margin-top: 0;">Yth. <strong>${user.name}</strong> (${user.organization || 'Kreator Event'}),</p>
+        <p style="color: #334155;">Selamat! Permohonan pendaftaran akun kreator event Anda telah <strong>DITINJAU DAN DISETUJUI</strong> oleh Tim Super Admin Celebes Event.</p>
+
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; padding: 16px; margin: 20px 0; border-radius: 8px;">
+          <div style="font-weight: 800; color: #15803d; font-size: 14px; margin-bottom: 4px;">✅ Status Akun: AKTIF & TERVERIFIKASI</div>
+          <p style="margin: 0; font-size: 13px; color: #166534;">
+            Anda kini memiliki hak akses penuh untuk menerbitkan event, menjual tiket berbayar/gratis, mengkustomisasi formulir peserta, memantau riwayat penjualan, dan menggunakan scanner QR check-in.
+          </p>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; font-size: 13px; margin-bottom: 20px;">
+          <div style="font-weight: bold; color: #0f172a; margin-bottom: 8px;">Informasi Akun Terverifikasi:</div>
+          <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+            <tr><td style="color: #64748b; padding: 4px 0; width: 140px;">Nama Organisasi / EO:</td><td style="font-weight: 600; color: #0f172a;">${user.organization || '-'}</td></tr>
+            <tr><td style="color: #64748b; padding: 4px 0;">Email Login:</td><td style="font-weight: 600; color: #0f172a;">${user.email}</td></tr>
+            <tr><td style="color: #64748b; padding: 4px 0;">Metode Autentikasi:</td><td style="font-weight: 600; color: #0f172a;">${user.auth_provider === 'google' ? 'Google Account (OAuth)' : 'Email & Password'}</td></tr>
+            <tr><td style="color: #64748b; padding: 4px 0;">Kota Operasional:</td><td style="font-weight: 600; color: #0f172a;">${user.city || 'Makassar / Sulawesi'}</td></tr>
+            <tr><td style="color: #64748b; padding: 4px 0;">Waktu Persetujuan:</td><td style="font-weight: 600; color: #0f172a;">${new Date().toLocaleString('id-ID')}</td></tr>
+          </table>
+        </div>
+
+        <p style="font-size: 14px; color: #334155;">Silakan kunjungi platform Celebes Event dan login untuk langsung masuk ke Creator Studio!</p>
+      </div>
+
+      <div style="border-top: 1px solid #e2e8f0; padding-top: 18px; font-size: 12px; color: #64748b; text-align: center;">
+        <p style="margin: 0 0 4px 0;"><strong>Celebes Event Management System</strong></p>
+        <p style="margin: 0; font-size: 11px;">Disetujui oleh Super Admin Pusat (redaksibergulircom@gmail.com)</p>
+      </div>
+    </div>`,
+    type: 'creator_approved',
+    sentAt: new Date().toISOString(),
+    status: 'delivered',
+    sender: 'Super Admin Pusat Celebes Event <redaksibergulircom@gmail.com>',
+  };
+}
 
 function saveLocalData() {
   try {
@@ -75,6 +127,7 @@ function saveLocalData() {
       settings: memorySettings,
       supportTickets: memorySupportTickets,
       faqs: memoryFaqs,
+      sentEmails: memorySentEmails,
       updatedAt: new Date().toISOString(),
     };
     fs.writeFileSync(LOCAL_STORAGE_FILE, JSON.stringify(dataToSave, null, 2), 'utf8');
@@ -96,6 +149,7 @@ function loadLocalData() {
       if (parsed.settings) memorySettings = parsed.settings;
       if (Array.isArray(parsed.supportTickets)) memorySupportTickets = parsed.supportTickets;
       if (Array.isArray(parsed.faqs)) memoryFaqs = parsed.faqs;
+      if (Array.isArray(parsed.sentEmails)) memorySentEmails = parsed.sentEmails;
       console.log('[Storage] Data lokal berhasil dimuat dari database/local_data.json');
     }
   } catch (err) {
@@ -273,6 +327,21 @@ app.get('/api/events/:idOrSlug', (req: Request, res: Response) => {
 });
 
 app.post('/api/events', (req: Request, res: Response) => {
+  const creatorId = req.body.creatorId;
+  const creatorUser = memoryUsers.find(u => u.id === creatorId);
+  if (creatorUser && creatorUser.role === 'creator') {
+    if (creatorUser.status === 'pending_approval') {
+      return res.status(403).json({
+        error: 'Akun kreator Anda sedang menunggu persetujuan dari Super Admin Pusat. Anda belum diizinkan membuat event.',
+      });
+    }
+    if (creatorUser.status === 'suspended') {
+      return res.status(403).json({
+        error: 'Akun kreator Anda sedang ditangguhkan. Hubungi Super Admin Pusat.',
+      });
+    }
+  }
+
   const newEvent: EventItem = {
     ...req.body,
     id: `evt-${Date.now()}`,
@@ -515,7 +584,8 @@ app.post('/api/auth/register-creator', (req: Request, res: Response) => {
     bankAccountNumber, 
     bankAccountName, 
     instagram, 
-    portfolioUrl 
+    portfolioUrl,
+    auth_provider
   } = req.body;
 
   if (!email || !organization || !name) {
@@ -536,7 +606,9 @@ app.post('/api/auth/register-creator', (req: Request, res: Response) => {
     name: name.trim(),
     role: 'creator',
     password: password || 'kreator123',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
+    avatar: auth_provider === 'google' 
+      ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80'
+      : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
     phone: phone || '',
     organization: organization.trim(),
     category: category || 'Konser Musik & Festival',
@@ -546,8 +618,8 @@ app.post('/api/auth/register-creator', (req: Request, res: Response) => {
     bankAccountName: bankAccountName || name,
     instagram: instagram || '',
     portfolioUrl: portfolioUrl || '',
-    auth_provider: 'local',
-    status: 'active', // Langsung aktif siap buat event
+    auth_provider: auth_provider || 'local',
+    status: 'pending_approval', // Wajib mendapat persetujuan Admin Pusat sebelum beraktivitas
     createdAt: new Date().toISOString(),
   };
 
@@ -557,13 +629,13 @@ app.post('/api/auth/register-creator', (req: Request, res: Response) => {
   res.status(201).json({
     success: true,
     user: newCreator,
-    message: `Pendaftaran kreator "${organization}" berhasil! Akun Anda aktif dan siap membuat event.`,
+    message: `Pendaftaran akun kreator "${organization}" berhasil! Akun Anda sedang menunggu persetujuan (approval) dari Super Admin Pusat. Anda akan menerima email resmi saat akun disetujui.`,
   });
 });
 
 // Pendaftaran Peserta Umum
 app.post('/api/auth/register-user', (req: Request, res: Response) => {
-  const { name, email, phone, password } = req.body;
+  const { name, email, phone, password, auth_provider } = req.body;
   if (!name || !email) {
     return res.status(400).json({ success: false, message: 'Nama dan email wajib diisi!' });
   }
@@ -581,8 +653,8 @@ app.post('/api/auth/register-user', (req: Request, res: Response) => {
     role: 'user',
     password: password || 'demo123',
     phone: phone || '',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80',
-    auth_provider: 'local',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80',
+    auth_provider: auth_provider || 'local',
     status: 'active',
     createdAt: new Date().toISOString(),
   };
@@ -593,52 +665,104 @@ app.post('/api/auth/register-user', (req: Request, res: Response) => {
   res.status(201).json({ success: true, user: newUser, message: 'Pendaftaran akun berhasil!' });
 });
 
-// Otentikasi Login (Mendukung Super Admin redaksibergulircom@gmail.com dan Kreator)
+// Otentikasi Login (Wajib Password untuk Super Admin, Kreator, dan Peserta)
 app.post('/api/auth/login', (req: Request, res: Response) => {
   const { email, password } = req.body;
-  if (!email) {
-    return res.status(400).json({ success: false, message: 'Masukkan alamat email Anda' });
+  
+  if (!email || !email.trim()) {
+    return res.status(400).json({ success: false, message: 'Alamat email wajib diisi!' });
+  }
+
+  if (!password || !password.trim()) {
+    return res.status(400).json({ success: false, message: 'Password wajib diisi! Masukkan password akun Anda.' });
   }
 
   const cleanEmail = email.trim().toLowerCase();
 
-  // Special match for Super Admin redaksibergulircom@gmail.com
-  if (cleanEmail === 'redaksibergulircom@gmail.com' || cleanEmail === 'admin@celebes-event.com' || cleanEmail.includes('admin')) {
+  // 1. Super Admin Match
+  if (cleanEmail === 'redaksibergulircom@gmail.com' || cleanEmail === 'admin@celebes-event.com' || cleanEmail.includes('admin@')) {
     const adminUser = memoryUsers.find(u => u.role === 'admin' && (u.email.toLowerCase() === cleanEmail || u.id === 'usr-admin-bergulir')) || memoryUsers[0];
     
-    // Check password if provided (allow Bergulir2026!# or demo123)
-    if (password && password !== 'Bergulir2026!#' && password !== 'demo123' && adminUser.password && adminUser.password !== password) {
-      return res.status(401).json({ success: false, message: 'Password Super Admin salah!' });
+    // Strict password verification for Super Admin
+    const isValidAdminPassword = (cleanEmail === 'redaksibergulircom@gmail.com' && password === 'Bergulir2026!#') ||
+      (cleanEmail === 'admin@celebes-event.com' && (password === 'demo123' || password === 'Bergulir2026!#')) ||
+      (adminUser.password && adminUser.password === password) ||
+      (password === 'Bergulir2026!#');
+
+    if (!isValidAdminPassword) {
+      return res.status(401).json({ success: false, message: 'Password Super Admin salah! Masukkan password resmi Bergulir Media.' });
     }
 
-    return res.json({ success: true, user: adminUser, message: 'Login Super Admin Berhasil!' });
+    return res.json({ 
+      success: true, 
+      user: adminUser, 
+      message: 'Login Super Admin Berhasil! Selamat datang di Pusat Kendali Celebes Event.' 
+    });
   }
 
-  // Find user in registered list
+  // 2. Normal User / Creator Match
   const user = memoryUsers.find(u => u.email.toLowerCase() === cleanEmail);
-  if (user) {
-    if (user.password && password && user.password !== password) {
-      return res.status(401).json({ success: false, message: 'Password yang Anda masukkan salah.' });
-    }
-    return res.json({ success: true, user, message: `Selamat datang kembali, ${user.name}!` });
+  if (!user) {
+    return res.status(404).json({ 
+      success: false, 
+      message: 'Akun dengan email ini belum terdaftar. Silakan lakukan pendaftaran akun terlebih dahulu.' 
+    });
   }
 
-  // Fallback auto-provision if demo login
-  const fallbackRole = cleanEmail.includes('kreator') || cleanEmail.includes('creator') ? 'creator' : 'user';
-  const autoUser: User = {
-    id: `usr-${Date.now().toString().slice(-6)}`,
-    email: cleanEmail,
-    name: cleanEmail.split('@')[0].replace(/[._]/g, ' ').toUpperCase(),
-    role: fallbackRole,
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80',
-    auth_provider: 'local',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-  };
+  // Check user suspension
+  if (user.status === 'suspended') {
+    return res.status(403).json({
+      success: false,
+      message: 'Akun Anda saat ini ditangguhkan / disuspend oleh Admin Pusat. Hubungi redaksibergulircom@gmail.com.',
+    });
+  }
 
-  memoryUsers.push(autoUser);
+  // Strict Password Verification
+  const userValidPassword = user.password || 'demo123';
+  if (password !== userValidPassword) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Password yang Anda masukkan salah. Silakan periksa kembali dan coba lagi.' 
+    });
+  }
+
+  // If creator is pending approval, notify in response
+  if (user.role === 'creator' && user.status === 'pending_approval') {
+    return res.json({ 
+      success: true, 
+      user, 
+      message: `Selamat datang, ${user.name}! Akun kreator Anda berstatus Menunggu Persetujuan Admin Pusat.` 
+    });
+  }
+
+  return res.json({ 
+    success: true, 
+    user, 
+    message: `Selamat datang kembali, ${user.name}!` 
+  });
+});
+
+// Persetujuan Kreator oleh Super Admin & Pengiriman Email Notifikasi
+app.post('/api/users/:id/approve', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const user = memoryUsers.find(u => u.id === id);
+  if (!user) {
+    return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
+  }
+
+  user.status = 'active';
+
+  // Generate & dispatch official approval email
+  const approvalEmail = generateCreatorApprovalEmail(user);
+  memorySentEmails.unshift(approvalEmail);
   saveLocalData();
-  return res.json({ success: true, user: autoUser, message: `Selamat datang, ${autoUser.name}!` });
+
+  res.json({
+    success: true,
+    user,
+    email: approvalEmail,
+    message: `Akun kreator "${user.name}" (${user.organization || 'Organisasi'}) berhasil disetujui! Email konfirmasi resmi telah dikirim ke ${user.email}.`,
+  });
 });
 
 // Status Moderasi Kreator / User oleh Super Admin
@@ -649,9 +773,48 @@ app.put('/api/users/:id/status', (req: Request, res: Response) => {
   if (!user) {
     return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
   }
+
+  const prevStatus = user.status;
   user.status = status;
+
+  let dispatchedEmail: SentEmailNotification | null = null;
+  // If transitioning to active, dispatch approval email
+  if (status === 'active' && prevStatus !== 'active' && user.role === 'creator') {
+    dispatchedEmail = generateCreatorApprovalEmail(user);
+    memorySentEmails.unshift(dispatchedEmail);
+  }
+
   saveLocalData();
-  res.json({ success: true, user, message: `Status pengguna berhasil diubah menjadi ${status}.` });
+  res.json({ 
+    success: true, 
+    user, 
+    email: dispatchedEmail,
+    message: `Status pengguna berhasil diubah menjadi ${status}.${dispatchedEmail ? ` Email notifikasi telah dikirim ke ${user.email}.` : ''}` 
+  });
+});
+
+// Riwayat Notifikasi Email Masuk / Terkirim
+app.get('/api/admin/sent-emails', (_req: Request, res: Response) => {
+  res.json(memorySentEmails);
+});
+
+// Kirim Ulang Email Notifikasi Persetujuan Kreator
+app.post('/api/admin/resend-approval-email', (req: Request, res: Response) => {
+  const { userId } = req.body;
+  const user = memoryUsers.find(u => u.id === userId);
+  if (!user) {
+    return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
+  }
+
+  const resentEmail = generateCreatorApprovalEmail(user);
+  memorySentEmails.unshift(resentEmail);
+  saveLocalData();
+
+  res.json({
+    success: true,
+    email: resentEmail,
+    message: `Email notifikasi persetujuan berhasil dikirim ulang ke ${user.email}!`,
+  });
 });
 
 // 9. Platform Settings & Branding

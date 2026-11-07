@@ -265,7 +265,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           ) : (
             <button
-              onClick={onOpenLoginModal}
+              onClick={() => onOpenLoginModal('login')}
               className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
             >
               <LogIn className="w-4 h-4" />
@@ -331,7 +331,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {!currentUser && (
           <button
-            onClick={onOpenLoginModal}
+            onClick={() => onOpenLoginModal('login')}
             className="flex flex-col items-center gap-0.5 py-1 px-2 rounded-md text-blue-600 font-bold"
           >
             <LogIn className="w-4 h-4" />

@@ -306,3 +306,17 @@ export interface FaqItem {
   answer: string;
   category: string;
 }
+
+export interface SentEmailNotification {
+  id: string;
+  recipientEmail: string;
+  recipientName: string;
+  recipientRole: UserRole;
+  subject: string;
+  bodyHtml: string;
+  type: 'creator_approved' | 'creator_registered' | 'payment_verified' | 'general';
+  sentAt: string;
+  status: 'delivered' | 'failed';
+  sender: string;
+}
+
