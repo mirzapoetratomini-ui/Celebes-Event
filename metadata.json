@@ -1,0 +1,6 @@
+{
+  "name": "TiketNusa - Event & Ticketing Management System",
+  "description": "Platform manajemen event dan pembayaran tiket multi-user berbasis Node.js & MySQL siap hosting untuk Super Admin, Kreator Event, dan Peserta.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
